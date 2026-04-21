@@ -1,0 +1,1075 @@
+﻿<Window
+    x:Class="GVisionWpf.UIs.Frames.Windows.Teaching.BgaTeachingWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:ha="http://schemas.mvtec.com/halcondotnet"
+    xmlns:local="clr-namespace:GVisionWpf.UIs.Frames.Windows"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:panels="clr-namespace:GVisionWpf.UIs.Frames.Panels"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
+    xmlns:types="clr-namespace:GVisionWpf.Types"
+    xmlns:utils="clr-namespace:GVisionWpf.Utils"
+    xmlns:viewModels="clr-namespace:GVisionWpf.UIs.ViewModels.Teaching"
+    xmlns:windows="clr-namespace:GVisionWpf.UIs.Frames.Windows"
+    Title="BGA Teaching Wizard"
+    Width="1040"
+    Height="800"
+    ResizeMode="NoResize"
+    ShowInTaskbar="True"
+    WindowStyle="None"
+    mc:Ignorable="d">
+
+    <Window.DataContext>
+        <viewModels:BgaTeachingViewModel />
+    </Window.DataContext>
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="20" ResizeBorderThickness="5" />
+    </WindowChrome.WindowChrome>
+
+    <Window.Background>
+        <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ControlColorKey}}" />
+    </Window.Background>
+
+    <Window.Resources>
+        <utils:VisionWindowToolsToolTipConverter x:Key="ToolBoxTooTipConverter" />
+
+        <Style TargetType="Label">
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <Style TargetType="ComboBox">
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="#acacac" />
+            <Setter Property="Background" Value="WhiteSmoke" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <Style TargetType="GroupBox">
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="#acacac" />
+            <Setter Property="Margin" Value="10,0" />
+        </Style>
+
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="WhiteSmoke" />
+            <Setter Property="BorderBrush" Value="#acacac" />
+        </Style>
+
+        <Style TargetType="{x:Type RibbonRadioButton}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type RibbonRadioButton}">
+                        <Border
+                            x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="2"
+                            CornerRadius="5">
+                            <StackPanel Margin="5">
+                                <Image
+                                    Width="40"
+                                    Height="40"
+                                    Source="{TemplateBinding LargeImageSource}" />
+                                <Label Content="{TemplateBinding Label}" Foreground="Black" />
+                            </StackPanel>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="Black" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="horizontalButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="440" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Margin" Value="5" />
+            <Setter Property="Background" Value="WhiteSmoke" />
+            <Setter Property="BorderBrush" Value="DarkGray" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <!--  Enum → ComboBox  -->
+        <ObjectDataProvider
+            x:Key="edgeDetectDirectionDataProvider"
+            MethodName="GetValues"
+            ObjectType="{x:Type system:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="types:EEdgeDetectDirection" />
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+        <ObjectDataProvider
+            x:Key="edgeDetectModeDataProvider"
+            MethodName="GetValues"
+            ObjectType="{x:Type system:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="types:EEdgeDetectMode" />
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+
+        <utils:FirstPinConverter x:Key="firstPinConverter" />
+    </Window.Resources>
+
+    <Border BorderBrush="#acacac" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="230" />
+                <RowDefinition Height="50" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!--  Custom Title Bar  -->
+            <Label
+                Grid.Row="0"
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
+                Content=" BGA Teaching Wizard">
+                <Label.Background>
+                    <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ControlLightLightColorKey}}" />
+                </Label.Background>
+            </Label>
+
+            <!--  HalconSmartWindow  -->
+            <panels:VisionWindow
+                x:Name="xVisionWindow"
+                Grid.Row="1"
+                Grid.Column="0"
+                Margin="5" />
+
+            <!--  Tracker Moving  -->
+            <Grid
+                Grid.Row="2"
+                Grid.RowSpan="2"
+                Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="45" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Vertical" />
+                <panels:TeachingToolsPanel Grid.Row="0" Margin="5,0,5,5" />
+                <panels:TrackerMovingPanel Grid.Row="1" />
+            </Grid>
+
+            <!--  Bottom Buttons  -->
+            <StackPanel
+                Grid.Row="3"
+                Grid.Column="1"
+                Margin="5,0,5,5"
+                HorizontalAlignment="Right"
+                Orientation="Horizontal">
+                <Button
+                    Width="100"
+                    Click="finishButton_Click"
+                    Command="{Binding closeCommand}"
+                    Content="Cancel" />
+                <Border Width="5" />
+                <Button
+                    Width="100"
+                    Click="previousButton_Click"
+                    Content="Previous" />
+                <Border Width="5" />
+                <Button
+                    Width="100"
+                    Click="nextButton_Click"
+                    Content="Next" />
+                <Border Width="5" />
+                <Button
+                    Width="100"
+                    Click="finishButton_Click"
+                    Command="{Binding saveRecipeCommand}"
+                    Content="Finish" />
+            </StackPanel>
+
+
+            <ScrollViewer
+                Grid.Row="1"
+                Grid.RowSpan="2"
+                Grid.Column="1">
+                <!--  Teaching Tabs  -->
+                <TabControl
+                    x:Name="xBgaTeachingTabControl"
+                    Margin="5"
+                    SelectionChanged="bgaTeachingTabControl_SelectionChanged">
+
+                    <TabItem Header="Package">
+                        <DockPanel>
+                            <Border Height="10" DockPanel.Dock="Bottom" />
+                            <GroupBox DockPanel.Dock="Top" Header="Package Outline">
+                                <StackPanel Orientation="Vertical">
+                                    <Grid Height="10" Margin="5,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="70" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="90" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <Grid Grid.Column="1">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Label
+                                                Grid.Column="0"
+                                                Margin="5,0"
+                                                Padding="0"
+                                                HorizontalContentAlignment="Center"
+                                                Content="L-TOP"
+                                                FontSize="9" />
+                                            <Label
+                                                Grid.Column="1"
+                                                Margin="5,0"
+                                                Padding="0"
+                                                HorizontalContentAlignment="Center"
+                                                Content="R-BOTTOM"
+                                                FontSize="9" />
+                                        </Grid>
+                                    </Grid>
+                                    <Grid Height="8" Margin="5,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="70" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="90" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <Grid Grid.Column="1">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Label
+                                                Grid.Column="0"
+                                                Margin="5,0"
+                                                Padding="0"
+                                                HorizontalContentAlignment="Center"
+                                                Content="ROW (Y)"
+                                                FontSize="7" />
+                                            <Label
+                                                Grid.Column="1"
+                                                Margin="5,0"
+                                                Padding="0"
+                                                HorizontalContentAlignment="Center"
+                                                Content="COL (X)"
+                                                FontSize="7" />
+                                            <Label
+                                                Grid.Column="2"
+                                                Margin="5,0"
+                                                Padding="0"
+                                                HorizontalContentAlignment="Center"
+                                                Content="ROW (Y)"
+                                                FontSize="7" />
+                                            <Label
+                                                Grid.Column="3"
+                                                Margin="5,0"
+                                                Padding="0"
+                                                HorizontalContentAlignment="Center"
+                                                Content="COL (X)"
+                                                FontSize="7" />
+                                        </Grid>
+                                    </Grid>
+                                    <panels:RoiPanelV2
+                                        x:Name="xPackageRoiPanelTop"
+                                        HeaderVisibility="Collapsed"
+                                        Label="TOP"
+                                        Roi="{Binding Teaching.PackageRoiTop, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                        Color="{x:Static types:EColor.Gold}" />
+
+                                    <panels:RoiPanelV2
+                                        x:Name="xPackageRoiPanelBottom"
+                                        HeaderVisibility="Collapsed"
+                                        Label="BTM"
+                                        Roi="{Binding Teaching.PackageRoiBottom, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                        Color="{x:Static types:EColor.Gold}" />
+
+                                    <panels:RoiPanelV2
+                                        x:Name="xPackageRoiPanelLeft"
+                                        HeaderVisibility="Collapsed"
+                                        Label="LEFT"
+                                        Roi="{Binding Teaching.PackageRoiLeft, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                        Color="{x:Static types:EColor.Gold}" />
+
+                                    <panels:RoiPanelV2
+                                        x:Name="xPackageRoiPanelRight"
+                                        HeaderVisibility="Collapsed"
+                                        Label="RIGHT"
+                                        Roi="{Binding Teaching.PackageRoiRight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                        Color="{x:Static types:EColor.Gold}" />
+
+                                    <panels:ThresholdControllerPanel x:Name="xPackageThresholdPanel" Threshold="{Binding Teaching.PackageThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Button
+                                        Click="packageAutoRoiButton_OnClick"
+                                        Command="{Binding findPackageRoiAutoCommand}"
+                                        Content="Auto ROI"
+                                        Style="{StaticResource horizontalButtonStyle}">
+                                        <Button.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="3" />
+                                            </Style>
+                                        </Button.Resources>
+                                    </Button>
+                                </StackPanel>
+                            </GroupBox>
+                            <GroupBox DockPanel.Dock="Top">
+                                <GroupBox.Header>
+                                    <Label Content="Edge Detection" />
+                                </GroupBox.Header>
+                                <StackPanel HorizontalAlignment="Center" Orientation="Vertical">
+                                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label
+                                                Height="30"
+                                                VerticalContentAlignment="Center"
+                                                Content="Direction" />
+                                            <ComboBox
+                                                x:Name="xSearchDirectionComboBox"
+                                                Width="110"
+                                                Margin="0,2"
+                                                VerticalContentAlignment="Center"
+                                                DisplayMemberPath="DisplayName"
+                                                ItemsSource="{utils:EnumToObjectArray SourceEnum={Binding Teaching.PackageEdgeDetectDirection}}"
+                                                SelectedValue="{Binding Teaching.PackageEdgeDetectDirection}"
+                                                SelectedValuePath="Value" />
+                                        </StackPanel>
+                                        <Border Width="30" />
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label Content="Type" />
+                                            <ComboBox
+                                                x:Name="xEdgeTypeComboBox"
+                                                Width="110"
+                                                Margin="0,2"
+                                                VerticalContentAlignment="Center"
+                                                DisplayMemberPath="DisplayName"
+                                                ItemsSource="{utils:EnumToObjectArray SourceEnum={Binding Teaching.PackageEdgeDetectMode}}"
+                                                SelectedValue="{Binding Teaching.PackageEdgeDetectMode}"
+                                                SelectedValuePath="Value" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                        <Label Content="Edge Threshold Amplitude" />
+                                        <TextBox
+                                            Margin="0,4"
+                                            Style="{StaticResource textBoxInError}"
+                                            Validation.ErrorTemplate="{StaticResource validationTemplate}">
+                                            <TextBox.Text>
+                                                <Binding
+                                                    Mode="TwoWay"
+                                                    Path="Teaching.PackageThresholdDiff"
+                                                    UpdateSourceTrigger="PropertyChanged">
+                                                    <Binding.ValidationRules>
+                                                        <utils:IntegerRangeRule Max="255" Min="1" />
+                                                    </Binding.ValidationRules>
+                                                </Binding>
+                                            </TextBox.Text>
+                                        </TextBox>
+                                    </StackPanel>
+
+                                    <Button
+                                        AutomationProperties.HelpText="Finds packages based on the parameters you set"
+                                        BorderBrush="#acacac"
+                                        Command="{Binding findAutoThresholdCommand}"
+                                        Content="Auto Threshold"
+                                        Style="{StaticResource horizontalButtonStyle}">
+                                        <Button.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="3" />
+                                            </Style>
+                                        </Button.Resources>
+                                    </Button>
+                                </StackPanel>
+                            </GroupBox>
+                            <GroupBox DockPanel.Dock="Top" Header="Model">
+                                <StackPanel>
+                                    <panels:RoiPanelV2
+                                        x:Name="xPackageModelRoiPanel"
+                                        HeaderVisibility="Collapsed"
+                                        Roi="{Binding Teaching.PackageModelRoi, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                        Color="{x:Static types:EColor.Gold}" />
+                                </StackPanel>
+                            </GroupBox>
+                            <GroupBox DockPanel.Dock="Bottom" Header="Teaching Test">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <Button
+                                        Click="findPackageButton_OnClick"
+                                        Command="{Binding inspectPackageCommand}"
+                                        Content="Find Package"
+                                        Style="{StaticResource horizontalButtonStyle}">
+                                        <Button.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="3" />
+                                            </Style>
+                                        </Button.Resources>
+                                    </Button>
+                                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label
+                                                Height="30"
+                                                VerticalContentAlignment="Center"
+                                                Content="Height" />
+                                            <TextBox
+                                                Margin="0,4"
+                                                Style="{StaticResource textBoxInError}"
+                                                Text="{Binding Mode=TwoWay, Path=PackageHeight, StringFormat={}{0:F2}, UpdateSourceTrigger=PropertyChanged}"
+                                                Validation.ErrorTemplate="{StaticResource validationTemplate}" />
+                                            <Label Content="{Binding Symbol}" />
+                                        </StackPanel>
+                                        <Border Width="80" />
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label Content="Width" />
+                                            <TextBox
+                                                Margin="0,4"
+                                                Style="{StaticResource textBoxInError}"
+                                                Text="{Binding Mode=TwoWay, Path=PackageWidth, StringFormat={}{0:F2}, UpdateSourceTrigger=PropertyChanged}"
+                                                Validation.ErrorTemplate="{StaticResource validationTemplate}" />
+                                            <Label Content="{Binding Symbol}" />
+                                        </StackPanel>
+                                        <Border Width="10" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </GroupBox>
+                            <Border />
+                        </DockPanel>
+                    </TabItem>
+
+                    <TabItem Header="FirstPin/Pattern">
+                        <DockPanel>
+                            <Border Height="10" DockPanel.Dock="Bottom" />
+                            <GroupBox DockPanel.Dock="Top" Header="First Pin">
+                                <StackPanel Orientation="Vertical">
+                                    <panels:RoiPanelV2
+                                        x:Name="xFirstPinRoiPanel"
+                                        Label="FirstPin"
+                                        Roi="{Binding Teaching.FirstPinRoi, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                        Color="{x:Static types:EColor.Orange}" />
+                                    <panels:ThresholdControllerPanel x:Name="xFirstPinThresholdPanel" Threshold="{Binding Teaching.FirstPinThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+                            </GroupBox>
+                            <GroupBox DockPanel.Dock="Top" Header="Pattern">
+                                <StackPanel Orientation="Vertical">
+                                    <panels:RoiDataListPanel
+                                        x:Name="xPatternRoiDataListPanel"
+                                        ItemsSource="{Binding Teaching.PatternRois}"
+                                        Label="Pattern ROI"
+                                        Color="{x:Static types:EColor.Gold}" />
+                                    <panels:ThresholdControllerPanel x:Name="xPatternThresholdPanel" Threshold="{Binding Teaching.PatternThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+                            </GroupBox>
+                            <GroupBox DockPanel.Dock="Bottom" Header="Teaching Test">
+                                <StackPanel>
+                                    <Button
+                                        Click="findFistPinAndPatternButton_OnClick"
+                                        Command="{Binding findFirstPinAndPatternCommand}"
+                                        Content="Find Pattern and First Pin"
+                                        Style="{StaticResource horizontalButtonStyle}">
+                                        <Button.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="3" />
+                                            </Style>
+                                        </Button.Resources>
+                                    </Button>
+                                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label Content="Pattern" />
+                                            <TextBox
+                                                Margin="0,4"
+                                                IsReadOnly="True"
+                                                Style="{StaticResource textBoxInError}"
+                                                Validation.ErrorTemplate="{StaticResource validationTemplate}">
+                                                <TextBox.Text>
+                                                    <Binding
+                                                        Mode="TwoWay"
+                                                        Path="PatternCount"
+                                                        UpdateSourceTrigger="PropertyChanged" />
+                                                </TextBox.Text>
+                                            </TextBox>
+                                            <Label Content="EA" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </StackPanel>
+                            </GroupBox>
+                            <Border />
+                        </DockPanel>
+                    </TabItem>
+
+                    <TabItem Header="Ball">
+                        <DockPanel>
+                            <Border Height="10" DockPanel.Dock="Bottom" />
+                            <GroupBox DockPanel.Dock="Top" Header="Ball Outline">
+                                <StackPanel Orientation="Vertical">
+                                    <panels:RoiDataListPanel
+                                        x:Name="xBallRoiDataListPanel"
+                                        ItemsSource="{Binding Teaching.BallRois}"
+                                        Label="Ball ROI"
+                                        Color="{x:Static types:EColor.Gold}" />
+                                    <panels:ThresholdControllerPanel x:Name="xBallThresholdPanel" Threshold="{Binding Teaching.BallThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Button
+                                        Command="{Binding findBallRoiAutoCommand}"
+                                        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                                        Content="Auto ROI"
+                                        Style="{StaticResource horizontalButtonStyle}">
+                                        <Button.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="3" />
+                                            </Style>
+                                        </Button.Resources>
+                                    </Button>
+                                </StackPanel>
+                            </GroupBox>
+                            <GroupBox DockPanel.Dock="Top" Header="Parameter">
+                                <StackPanel>
+                                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label
+                                                Height="30"
+                                                VerticalContentAlignment="Center"
+                                                Content="Ball Offset Tolerance" />
+                                            <TextBox
+                                                Width="60"
+                                                Margin="0,4"
+                                                VerticalContentAlignment="Center"
+                                                Style="{StaticResource textBoxInError}"
+                                                Validation.ErrorTemplate="{StaticResource validationTemplate}">
+                                                <TextBox.Text>
+                                                    <Binding
+                                                        Mode="TwoWay"
+                                                        Path="Teaching.BallPositionOffset"
+                                                        UpdateSourceTrigger="PropertyChanged">
+                                                        <Binding.ValidationRules>
+                                                            <utils:IntegerRangeRule Max="100" Min="1" />
+                                                        </Binding.ValidationRules>
+                                                    </Binding>
+                                                </TextBox.Text>
+                                            </TextBox>
+                                            <Label
+                                                Height="30"
+                                                VerticalContentAlignment="Center"
+                                                Content="px" />
+                                        </StackPanel>
+                                        <Border Width="30" />
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label
+                                                Height="30"
+                                                VerticalContentAlignment="Center"
+                                                Content="Min Circularity" />
+                                            <TextBox
+                                                Width="60"
+                                                Margin="0,4"
+                                                VerticalContentAlignment="Center"
+                                                Style="{StaticResource textBoxInError}"
+                                                Validation.ErrorTemplate="{StaticResource validationTemplate}">
+                                                <TextBox.Text>
+                                                    <Binding
+                                                        Mode="TwoWay"
+                                                        Path="Teaching.BallMinCircularity"
+                                                        UpdateSourceTrigger="PropertyChanged">
+                                                        <Binding.ValidationRules>
+                                                            <utils:IntegerRangeRule Max="100" Min="1" />
+                                                        </Binding.ValidationRules>
+                                                    </Binding>
+                                                </TextBox.Text>
+                                            </TextBox>
+                                            <Label
+                                                Height="30"
+                                                VerticalContentAlignment="Center"
+                                                Content="%" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </StackPanel>
+                            </GroupBox>
+                            <GroupBox DockPanel.Dock="Bottom" Header="Teaching Test">
+                                <StackPanel>
+                                    <Button
+                                        Click="findBallButton_OnClick"
+                                        Command="{Binding findBallsCommand}"
+                                        Content="Find Balls"
+                                        Style="{StaticResource horizontalButtonStyle}">
+                                        <Button.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="3" />
+                                            </Style>
+                                        </Button.Resources>
+                                    </Button>
+                                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label Content="Ball" />
+                                            <TextBox
+                                                Margin="0,4"
+                                                IsReadOnly="True"
+                                                Style="{StaticResource textBoxInError}"
+                                                Validation.ErrorTemplate="{StaticResource validationTemplate}">
+                                                <TextBox.Text>
+                                                    <Binding
+                                                        Mode="TwoWay"
+                                                        Path="BallCount"
+                                                        UpdateSourceTrigger="PropertyChanged">
+                                                        <Binding.ValidationRules>
+                                                            <utils:IntegerRangeRule Max="50000" Min="1" />
+                                                        </Binding.ValidationRules>
+                                                    </Binding>
+                                                </TextBox.Text>
+                                            </TextBox>
+                                            <Label Content="EA" />
+                                        </StackPanel>
+                                        <Border Width="5" />
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label Content="Min Size" />
+                                            <TextBox
+                                                Margin="0,4"
+                                                Style="{StaticResource textBoxInError}"
+                                                Validation.ErrorTemplate="{StaticResource validationTemplate}">
+                                                <TextBox.Text>
+                                                    <Binding
+                                                        Mode="TwoWay"
+                                                        Path="Teaching.BallMinSize"
+                                                        UpdateSourceTrigger="PropertyChanged">
+                                                        <Binding.ValidationRules>
+                                                            <utils:IntegerRangeRule Max="50000" Min="1" />
+                                                        </Binding.ValidationRules>
+                                                    </Binding>
+                                                </TextBox.Text>
+                                            </TextBox>
+                                            <Label Content="px" />
+                                        </StackPanel>
+                                        <Border Width="5" />
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label Content="Max Size" />
+                                            <TextBox
+                                                Margin="0,4"
+                                                Style="{StaticResource textBoxInError}"
+                                                Validation.ErrorTemplate="{StaticResource validationTemplate}">
+                                                <TextBox.Text>
+                                                    <Binding
+                                                        Mode="TwoWay"
+                                                        Path="Teaching.BallMaxSize"
+                                                        UpdateSourceTrigger="PropertyChanged">
+                                                        <Binding.ValidationRules>
+                                                            <utils:IntegerRangeRule Max="50000" Min="1" />
+                                                        </Binding.ValidationRules>
+                                                    </Binding>
+                                                </TextBox.Text>
+                                            </TextBox>
+                                            <Label Content="px" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </StackPanel>
+                            </GroupBox>
+                            <Border />
+                        </DockPanel>
+                    </TabItem>
+
+                    <!--  Surface Tab  -->
+                    <TabItem Header="Surface">
+                        <DockPanel>
+                            <Border Height="10" DockPanel.Dock="Bottom" />
+                            <GroupBox DockPanel.Dock="Top" Header="Surface Inspection Region">
+                                <panels:RoiDataListPanel
+                                    x:Name="xSurfaceRoiDataListPanel"
+                                    ItemsSource="{Binding Teaching.SurfaceRois}"
+                                    Label="Scratch ROI"
+                                    Color="{x:Static types:EColor.Gold}" />
+                            </GroupBox>
+                            <GroupBox DockPanel.Dock="Top" Header="Scratch">
+                                <StackPanel>
+                                    <panels:ThresholdControllerPanel
+                                        x:Name="xScratchThresholdPanel"
+                                        DrawMode="fill"
+                                        Threshold="{Binding Teaching.ScratchThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                        Color="red" />
+                                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                        <Label Content="Min Size" />
+                                        <TextBox Style="{StaticResource textBoxInError}" Validation.ErrorTemplate="{StaticResource validationTemplate}">
+                                            <TextBox.Text>
+                                                <Binding
+                                                    Mode="TwoWay"
+                                                    Path="Teaching.ScratchMinSize"
+                                                    UpdateSourceTrigger="PropertyChanged">
+                                                    <Binding.ValidationRules>
+                                                        <utils:IntegerRangeRule Max="50000" Min="1" />
+                                                    </Binding.ValidationRules>
+                                                </Binding>
+                                            </TextBox.Text>
+                                        </TextBox>
+                                        <Label Content="px" />
+                                        <Border Width="20" />
+                                        <Label Content="Max Size" />
+                                        <TextBox Style="{StaticResource textBoxInError}" Validation.ErrorTemplate="{StaticResource validationTemplate}">
+                                            <TextBox.Text>
+                                                <Binding
+                                                    Mode="TwoWay"
+                                                    Path="Teaching.ScratchMaxSize"
+                                                    UpdateSourceTrigger="PropertyChanged">
+                                                    <Binding.ValidationRules>
+                                                        <utils:IntegerRangeRule Max="1000000" Min="1" />
+                                                    </Binding.ValidationRules>
+                                                </Binding>
+                                            </TextBox.Text>
+                                        </TextBox>
+                                        <Label Content="px" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </GroupBox>
+                            <GroupBox DockPanel.Dock="Top" Header="Foreign Material">
+                                <StackPanel>
+                                    <panels:ThresholdControllerPanel
+                                        x:Name="xForeignMaterialThresholdPanel"
+                                        DrawMode="fill"
+                                        Threshold="{Binding Teaching.ForeignMaterialThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                        Color="red" />
+                                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                        <Label Content="Min Size" />
+                                        <TextBox Style="{StaticResource textBoxInError}" Validation.ErrorTemplate="{StaticResource validationTemplate}">
+                                            <TextBox.Text>
+                                                <Binding
+                                                    Mode="TwoWay"
+                                                    Path="Teaching.ForeignMaterialMinSize"
+                                                    UpdateSourceTrigger="PropertyChanged">
+                                                    <Binding.ValidationRules>
+                                                        <utils:IntegerRangeRule Max="50000" Min="1" />
+                                                    </Binding.ValidationRules>
+                                                </Binding>
+                                            </TextBox.Text>
+                                        </TextBox>
+                                        <Label Content="px" />
+                                        <Border Width="20" />
+                                        <Label Content="Max Size" />
+                                        <TextBox Style="{StaticResource textBoxInError}" Validation.ErrorTemplate="{StaticResource validationTemplate}">
+                                            <TextBox.Text>
+                                                <Binding
+                                                    Mode="TwoWay"
+                                                    Path="Teaching.ForeignMaterialMaxSize"
+                                                    UpdateSourceTrigger="PropertyChanged">
+                                                    <Binding.ValidationRules>
+                                                        <utils:IntegerRangeRule Max="1000000" Min="1" />
+                                                    </Binding.ValidationRules>
+                                                </Binding>
+                                            </TextBox.Text>
+                                        </TextBox>
+                                        <Label Content="px" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </GroupBox>
+                            <GroupBox DockPanel.Dock="Top" Header="Contamination">
+                                <StackPanel>
+                                    <panels:ThresholdControllerPanel
+                                        x:Name="xContaminationThresholdPanel"
+                                        DrawMode="fill"
+                                        Threshold="{Binding Teaching.ContaminationThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                        Color="red" />
+                                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                        <Label Content="Min Size" />
+                                        <TextBox Style="{StaticResource textBoxInError}" Validation.ErrorTemplate="{StaticResource validationTemplate}">
+                                            <TextBox.Text>
+                                                <Binding
+                                                    Mode="TwoWay"
+                                                    Path="Teaching.ContaminationMinSize"
+                                                    UpdateSourceTrigger="PropertyChanged">
+                                                    <Binding.ValidationRules>
+                                                        <utils:IntegerRangeRule Max="50000" Min="1" />
+                                                    </Binding.ValidationRules>
+                                                </Binding>
+                                            </TextBox.Text>
+                                        </TextBox>
+                                        <Label Content="px" />
+                                        <Border Width="20" />
+                                        <Label Content="Max Size" />
+                                        <TextBox Style="{StaticResource textBoxInError}" Validation.ErrorTemplate="{StaticResource validationTemplate}">
+                                            <TextBox.Text>
+                                                <Binding
+                                                    Mode="TwoWay"
+                                                    Path="Teaching.ContaminationMaxSize"
+                                                    UpdateSourceTrigger="PropertyChanged">
+                                                    <Binding.ValidationRules>
+                                                        <utils:IntegerRangeRule Max="1000000" Min="1" />
+                                                    </Binding.ValidationRules>
+                                                </Binding>
+                                            </TextBox.Text>
+                                        </TextBox>
+                                        <Label Content="px" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </GroupBox>
+                            <GroupBox DockPanel.Dock="Bottom" Header="Teaching Test">
+                                <StackPanel>
+                                    <Button
+                                        Click="findPackageButton_OnClick"
+                                        Command="{Binding inspectSurfaceCommand}"
+                                        Content="Inspect Surface"
+                                        Style="{StaticResource horizontalButtonStyle}" />
+                                    <StackPanel HorizontalAlignment="Center" Orientation="Vertical">
+                                        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                            <Label Content="Scratch" />
+                                            <TextBox
+                                                Style="{StaticResource textBoxInError}"
+                                                Text="{Binding Mode=TwoWay, Path=ScratchCount, StringFormat={}{0:0}, UpdateSourceTrigger=PropertyChanged}"
+                                                Validation.ErrorTemplate="{StaticResource validationTemplate}" />
+                                            <Label Content="EA" />
+                                        </StackPanel>
+                                        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                            <Label Content="Foreign Material" />
+                                            <TextBox
+                                                Style="{StaticResource textBoxInError}"
+                                                Text="{Binding Mode=TwoWay, Path=ForeignMaterialCount, StringFormat={}{0:0}, UpdateSourceTrigger=PropertyChanged}"
+                                                Validation.ErrorTemplate="{StaticResource validationTemplate}" />
+                                            <Label Content="EA" />
+                                            <Border Width="10" />
+                                            <Label Content="Contamination" />
+                                            <TextBox
+                                                Style="{StaticResource textBoxInError}"
+                                                Text="{Binding Mode=TwoWay, Path=ContaminationCount, StringFormat={}{0:0}, UpdateSourceTrigger=PropertyChanged}"
+                                                Validation.ErrorTemplate="{StaticResource validationTemplate}" />
+                                            <Label Content="EA" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </StackPanel>
+                            </GroupBox>
+                            <Border />
+                        </DockPanel>
+                    </TabItem>
+
+                    <TabItem Header="Sawing">
+                        <DockPanel>
+                            <Border Height="10" DockPanel.Dock="Bottom" />
+                            <GroupBox DockPanel.Dock="Top" Header="Saw Offset">
+                                <StackPanel Orientation="Vertical">
+                                    <panels:SawOffsetListPanel
+                                        x:Name="xSawOffsetListPanel"
+                                        SawOffsetItems="{Binding Teaching.SawOffsetItems}"
+                                        SawOffsetStandardObjects="{Binding SawOffsetStandardObjectSources}" />
+                                </StackPanel>
+                            </GroupBox>
+                            <GroupBox DockPanel.Dock="Top" Header="Chipping/Burr">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border Width="6" />
+                                        <Label Width="90" Content="Outline Width" />
+                                        <Slider
+                                            Width="290"
+                                            VerticalAlignment="Center"
+                                            Maximum="1000"
+                                            Minimum="1"
+                                            Value="{Binding Teaching.OutlineWidth}" />
+                                        <TextBox Style="{StaticResource textBoxInError}" Text="{Binding Teaching.OutlineWidth, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}" />
+                                    </StackPanel>
+                                    <panels:ThresholdControllerPanel
+                                        x:Name="xOutlineThresholdPanel"
+                                        DrawMode="fill"
+                                        Threshold="{Binding Teaching.OutlineThreshold}" />
+                                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                        <Label Width="90" Content="Short Side" />
+                                        <Label Content="Min Length" />
+                                        <TextBox
+                                            Style="{StaticResource textBoxInError}"
+                                            Text="{Binding Teaching.MinLengthOfShortSide}"
+                                            Validation.ErrorTemplate="{StaticResource validationTemplate}" />
+                                        <Label Content="{Binding Symbol}" />
+                                        <Border Width="20" />
+                                        <Label Content="Max Length" />
+                                        <TextBox
+                                            Style="{StaticResource textBoxInError}"
+                                            Text="{Binding Teaching.MaxLengthOfShortSide}"
+                                            Validation.ErrorTemplate="{StaticResource validationTemplate}" />
+                                        <Label Content="{Binding Symbol}" />
+                                    </StackPanel>
+                                    <Border Height="5" />
+                                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                        <Label Width="90" Content="Long Side" />
+                                        <Label Content="Min Length" />
+                                        <TextBox
+                                            Style="{StaticResource textBoxInError}"
+                                            Text="{Binding Teaching.MinLengthOfLongSide}"
+                                            Validation.ErrorTemplate="{StaticResource validationTemplate}" />
+                                        <Label Content="{Binding Symbol}" />
+                                        <Border Width="20" />
+                                        <Label Content="Max Length" />
+                                        <TextBox
+                                            Style="{StaticResource textBoxInError}"
+                                            Text="{Binding Teaching.MaxLengthOfLongSide}"
+                                            Validation.ErrorTemplate="{StaticResource validationTemplate}" />
+                                        <Label Content="{Binding Symbol}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </GroupBox>
+                            <GroupBox DockPanel.Dock="Bottom" Header="Teaching Test">
+                                <StackPanel>
+                                    <Button
+                                        Click="findPackageButton_OnClick"
+                                        Command="{Binding inspectSawingCommand}"
+                                        Content="Inspect Sawing"
+                                        Style="{StaticResource horizontalButtonStyle}" />
+                                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                        <Label Content="Chipping" />
+                                        <TextBox
+                                            IsReadOnly="True"
+                                            Style="{StaticResource textBoxInError}"
+                                            Text="{Binding Mode=TwoWay, Path=ChippingCount, StringFormat={}{0:0}, UpdateSourceTrigger=PropertyChanged}" />
+                                        <Label Content="EA" />
+                                        <Border Width="10" />
+                                        <Label Content="Burr" />
+                                        <TextBox
+                                            IsReadOnly="True"
+                                            Style="{StaticResource textBoxInError}"
+                                            Text="{Binding Mode=TwoWay, Path=BurrCount, StringFormat={}{0:0}, UpdateSourceTrigger=PropertyChanged}" />
+                                        <Label Content="EA" />
+                                    </StackPanel>
+                                    <Border Height="5" />
+                                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                        <Label Content="SawOffset" />
+                                        <Label Content="X" />
+                                        <TextBox
+                                            IsReadOnly="True"
+                                            Style="{StaticResource textBoxInError}"
+                                            Text="{Binding Mode=TwoWay, Path=SawOffsetX, StringFormat={}{0:N2}, UpdateSourceTrigger=PropertyChanged}" />
+                                        <Label Content="{Binding Symbol}" />
+                                        <Border Width="10" />
+                                        <Label Content="Y" />
+                                        <TextBox
+                                            IsReadOnly="True"
+                                            Style="{StaticResource textBoxInError}"
+                                            Text="{Binding Mode=TwoWay, Path=SawOffsetY, StringFormat={}{0:N2}, UpdateSourceTrigger=PropertyChanged}" />
+                                        <Label Content="{Binding Symbol}" />
+                                    </StackPanel>
+                                    <Border Height="5" />
+                                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                        <Label Content="Corner Degree" />
+                                        <Label Content="TL" />
+                                        <TextBox
+                                            IsReadOnly="True"
+                                            Style="{StaticResource textBoxInError}"
+                                            Text="{Binding Mode=TwoWay, Path=CornerDegreeTopLeft, StringFormat={}{0:N2}, UpdateSourceTrigger=PropertyChanged}" />
+                                        <Label Content="TR" />
+                                        <TextBox
+                                            IsReadOnly="True"
+                                            Style="{StaticResource textBoxInError}"
+                                            Text="{Binding Mode=TwoWay, Path=CornerDegreeTopRight, StringFormat={}{0:N2}, UpdateSourceTrigger=PropertyChanged}" />
+                                        <Label Content="BL" />
+                                        <TextBox
+                                            IsReadOnly="True"
+                                            Style="{StaticResource textBoxInError}"
+                                            Text="{Binding Mode=TwoWay, Path=CornerDegreeBottomLeft, StringFormat={}{0:N2}, UpdateSourceTrigger=PropertyChanged}" />
+                                        <Label Content="BR" />
+                                        <TextBox
+                                            IsReadOnly="True"
+                                            Style="{StaticResource textBoxInError}"
+                                            Text="{Binding Mode=TwoWay, Path=CornerDegreeBottomRight, StringFormat={}{0:N2}, UpdateSourceTrigger=PropertyChanged}" />
+                                        <Label Content="º" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </GroupBox>
+                            <Border />
+                        </DockPanel>
+                    </TabItem>
+
+                    <!--  Reject Mark Tab  -->
+                    <TabItem Header="Reject Mark">
+                        <DockPanel>
+                            <Border Height="10" DockPanel.Dock="Bottom" />
+                            <GroupBox DockPanel.Dock="Top" Header="Reject Mark">
+                                <StackPanel>
+                                    <panels:RoiPanelV2
+                                        x:Name="xRejectMarkRoiPanel"
+                                        Label="ROI"
+                                        Roi="{Binding Teaching.RejectMarkRoi, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                        Color="{x:Static types:EColor.Gold}" />
+                                    <panels:ThresholdControllerPanel x:Name="xRejectMarkThresholdPanel" Threshold="{Binding Teaching.RejectMarkThreshold, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                        <Label Content="Min Size" />
+                                        <TextBox Style="{StaticResource textBoxInError}" Validation.ErrorTemplate="{StaticResource validationTemplate}">
+                                            <TextBox.Text>
+                                                <Binding
+                                                    Mode="TwoWay"
+                                                    Path="Teaching.RejectMarkMinSize"
+                                                    UpdateSourceTrigger="PropertyChanged">
+                                                    <Binding.ValidationRules>
+                                                        <utils:IntegerRangeRule Max="50000" Min="1" />
+                                                    </Binding.ValidationRules>
+                                                </Binding>
+                                            </TextBox.Text>
+                                        </TextBox>
+                                        <Label Content="px" />
+                                        <Border Width="20" />
+                                        <Label Content="Max Size" />
+                                        <TextBox Style="{StaticResource textBoxInError}" Validation.ErrorTemplate="{StaticResource validationTemplate}">
+                                            <TextBox.Text>
+                                                <Binding
+                                                    Mode="TwoWay"
+                                                    Path="Teaching.RejectMarkMaxSize"
+                                                    UpdateSourceTrigger="PropertyChanged">
+                                                    <Binding.ValidationRules>
+                                                        <utils:IntegerRangeRule Max="1000000" Min="1" />
+                                                    </Binding.ValidationRules>
+                                                </Binding>
+                                            </TextBox.Text>
+                                        </TextBox>
+                                        <Label Content="px" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </GroupBox>
+                            <GroupBox DockPanel.Dock="Bottom" Header="Teaching Test">
+                                <StackPanel>
+                                    <Button
+                                        Click="findPackageButton_OnClick"
+                                        Command="{Binding inspectRejectMarkCommand}"
+                                        Content="Inspect Reject Mark"
+                                        Style="{StaticResource horizontalButtonStyle}" />
+                                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                        <Label Content="Reject Mark" />
+                                        <TextBox
+                                            Style="{StaticResource textBoxInError}"
+                                            Text="{Binding Mode=TwoWay, Path=RejectMarkCount, StringFormat={}{0:0}, UpdateSourceTrigger=PropertyChanged}"
+                                            Validation.ErrorTemplate="{StaticResource validationTemplate}" />
+                                        <Label Content="EA" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </GroupBox>
+                            <Border />
+                        </DockPanel>
+                    </TabItem>
+
+                    <!--  Don't ROI Tab  -->
+                    <TabItem Header="Don't Care">
+                        <DockPanel>
+                            <Border Height="10" DockPanel.Dock="Bottom" />
+                            <GroupBox DockPanel.Dock="Top" Header="Don't Care">
+                                <panels:RoiDataListPanel
+                                    x:Name="xDontCareRoiDataListPanel"
+                                    ItemsSource="{Binding Teaching.DontCareRois}"
+                                    Label="Don't Care ROI"
+                                    Color="{x:Static types:EColor.Gold}" />
+                            </GroupBox>
+                            <Border />
+                        </DockPanel>
+                    </TabItem>
+
+                    <!--  Result Tab  -->
+                    <TabItem Header="Result">
+                        <GroupBox Margin="10,0,10,10" Header="Inspection Test">
+                            <DockPanel>
+                                <Button
+                                    Command="{Binding inspectCommand}"
+                                    Content="Inspection"
+                                    DockPanel.Dock="Top"
+                                    Style="{StaticResource horizontalButtonStyle}" />
+                                <ScrollViewer>
+                                    <TextBlock
+                                        Margin="5"
+                                        Text="{Binding InspectionResultStr}"
+                                        TextWrapping="Wrap" />
+                                </ScrollViewer>
+                            </DockPanel>
+                        </GroupBox>
+                    </TabItem>
+                </TabControl>
+            </ScrollViewer>
+        </Grid>
+    </Border>
+</Window>

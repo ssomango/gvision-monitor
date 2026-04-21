@@ -1,0 +1,42 @@
+﻿namespace GVisionWpf.Types
+{
+    public enum EColor
+    {
+        Black,
+        White,
+        Red,
+        Green,
+        Blue,
+        DimGray,
+        Gray,
+        LightGray,
+        Cyan,
+        Magenta,
+        Yellow,
+        MediumSlateBlue,
+        Coral,
+        SlateBlue,
+        SpringGreen,
+        OrangeRed,
+        DarkOliveGreen,
+        Pink,
+        CadetBlue,
+        Goldenrod,
+        Orange,
+        Gold,
+        ForestGreen,
+        CornflowerBlue,
+        Navy,
+        Turquoise,
+        DarkSlateBlue,
+        LightBlue,
+        IndianRed,
+        VioletRed,
+        LightSteelBlue,
+        MediumBlue,
+        Khaki,
+        Violet,
+        Firebrick,
+        MidnightBlue
+    }
+}

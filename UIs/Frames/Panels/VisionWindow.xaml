@@ -1,0 +1,13 @@
+﻿<UserControl
+    x:Class="GVisionWpf.UIs.Frames.Panels.VisionWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:ha="http://schemas.mvtec.com/halcondotnet"
+    xmlns:local="clr-namespace:GVisionWpf.UIs.Frames.Panels"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <ha:HSmartWindowControlWPF x:Name="xHSmartWindow" HMouseMove="xHSmartWindow_OnHMouseMove" />
+</UserControl>
