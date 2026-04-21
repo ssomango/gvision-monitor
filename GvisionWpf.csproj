@@ -1,0 +1,301 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <Platforms>x64</Platforms>
+    <PackageIcon>genesem.png</PackageIcon>
+    <ApplicationIcon>Assets\Icons\Logos\genesem.ico</ApplicationIcon>
+    <LangVersion>preview</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Assets\InspectionTolerances\**" />
+    <Compile Remove="DomainLayer\Data\InspectionResult\**" />
+    <Compile Remove="obj\**" />
+    <EmbeddedResource Remove="Assets\InspectionTolerances\**" />
+    <EmbeddedResource Remove="DomainLayer\Data\InspectionResult\**" />
+    <EmbeddedResource Remove="obj\**" />
+    <None Remove="Assets\InspectionTolerances\**" />
+    <None Remove="DomainLayer\Data\InspectionResult\**" />
+    <None Remove="obj\**" />
+    <Page Remove="Assets\InspectionTolerances\**" />
+    <Page Remove="DomainLayer\Data\InspectionResult\**" />
+    <Page Remove="obj\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\Icons\add.png" />
+    <None Remove="Assets\Icons\alert.png" />
+    <None Remove="Assets\Icons\as.png" />
+    <None Remove="Assets\Icons\chat\bubble-chat.png" />
+    <None Remove="Assets\Icons\chat\chat_send_button.png" />
+    <None Remove="Assets\Icons\chat\chat_send_button2.png" />
+    <None Remove="Assets\Icons\check.png" />
+    <None Remove="Assets\Icons\copy.png" />
+    <None Remove="Assets\Icons\deepseers.png" />
+    <None Remove="Assets\Icons\deepseers2.png" />
+    <None Remove="Assets\Icons\fix.png" />
+    <None Remove="Assets\Icons\folder-open.png" />
+    <None Remove="Assets\Icons\grayValue.png" />
+    <None Remove="Assets\Icons\grid.png" />
+    <None Remove="Assets\Icons\histogram.png" />
+    <None Remove="Assets\Icons\info.png" />
+    <None Remove="Assets\Icons\Lga\Chamfer.png" />
+    <None Remove="Assets\Icons\Lga\Notch.png" />
+    <None Remove="Assets\Icons\Lga\smallPad.png" />
+    <None Remove="Assets\Icons\line-profile.png" />
+    <None Remove="Assets\Icons\Logos\deepseers.ico" />
+    <None Remove="Assets\Icons\menu-dots-vertical.png" />
+    <None Remove="Assets\Icons\menu-dots.png" />
+    <None Remove="Assets\Icons\overlay.png" />
+    <None Remove="Assets\Icons\pin.png" />
+    <None Remove="Assets\Icons\play.png" />
+    <None Remove="Assets\Icons\Qfn\Chamfer.png" />
+    <None Remove="Assets\Icons\Qfn\Notch.png" />
+    <None Remove="Assets\Icons\Qfn\smallPad.png" />
+    <None Remove="Assets\Icons\rename.png" />
+    <None Remove="Assets\Icons\reset-zoom.png" />
+    <None Remove="Assets\Icons\retry.png" />
+    <None Remove="Assets\Icons\ruler.png" />
+    <None Remove="Assets\Icons\run.png" />
+    <None Remove="Assets\Icons\save.png" />
+    <None Remove="Assets\Icons\setup.png" />
+    <None Remove="Assets\Icons\Sidebar\3point.png" />
+    <None Remove="Assets\Icons\Sidebar\as.png" />
+    <None Remove="Assets\Icons\Sidebar\bga.png" />
+    <None Remove="Assets\Icons\Sidebar\calibration.png" />
+    <None Remove="Assets\Icons\Sidebar\database-index.png" />
+    <None Remove="Assets\Icons\Sidebar\db-index.png" />
+    <None Remove="Assets\Icons\Sidebar\db-pkg.png" />
+    <None Remove="Assets\Icons\Sidebar\db-sheet.png" />
+    <None Remove="Assets\Icons\Sidebar\exit.png" />
+    <None Remove="Assets\Icons\Sidebar\history.png" />
+    <None Remove="Assets\Icons\Sidebar\ini.png" />
+    <None Remove="Assets\Icons\Sidebar\io.png" />
+    <None Remove="Assets\Icons\Sidebar\jig.png" />
+    <None Remove="Assets\Icons\Sidebar\lga.png" />
+    <None Remove="Assets\Icons\Sidebar\light.png" />
+    <None Remove="Assets\Icons\Sidebar\lot-data.png" />
+    <None Remove="Assets\Icons\Sidebar\mark.png" />
+    <None Remove="Assets\Icons\Sidebar\qfn.png" />
+    <None Remove="Assets\Icons\Sidebar\save.png" />
+    <None Remove="Assets\Icons\Sidebar\security.png" />
+    <None Remove="Assets\Icons\Sidebar\setting.png" />
+    <None Remove="Assets\Icons\Sidebar\test.png" />
+    <None Remove="Assets\Icons\stop.png" />
+    <None Remove="Assets\Icons\strip-icon.png" />
+    <None Remove="Assets\Icons\strip.png" />
+    <None Remove="Assets\Icons\system-usage.png" />
+    <None Remove="Assets\Icons\text.png" />
+    <None Remove="Assets\Icons\Tracker\arrow-down-left.png" />
+    <None Remove="Assets\Icons\Tracker\arrow-down-right.png" />
+    <None Remove="Assets\Icons\Tracker\arrow-down.png" />
+    <None Remove="Assets\Icons\Tracker\arrow-left.png" />
+    <None Remove="Assets\Icons\Tracker\arrow-right.png" />
+    <None Remove="Assets\Icons\Tracker\arrow-up-left.png" />
+    <None Remove="Assets\Icons\Tracker\arrow-up-right.png" />
+    <None Remove="Assets\Icons\Tracker\arrow-up.png" />
+    <None Remove="Assets\Icons\trash.png" />
+    <None Remove="Assets\Icons\undo.png" />
+    <None Remove="Assets\Icons\x.png" />
+    <None Remove="Assets\Icons\zoom-in.png" />
+    <None Remove="Assets\Icons\zoom-out.png" />
+    <None Remove="Assets\Icons\zoom.png" />
+    <None Remove="Assets\Tutor\package_gridroi_example.png" />
+    <None Remove="Assets\SampleImages\logo-genesem.png" />
+    <None Remove="Assets\UiImages\find-mark-guide.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AnyDiff" Version="1.0.99" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="CsvHelper" Version="32.0.1" />
+    <PackageReference Include="Dapper" Version="2.1.35" />
+    <PackageReference Include="Delaunator" Version="1.0.11" />
+    <PackageReference Include="JB.TcHmiSimpleRangeSlider" Version="1.1.0" />
+    <PackageReference Include="KdTree" Version="1.4.1" />
+    <PackageReference Include="LiveCharts" Version="0.9.7" />
+    <PackageReference Include="LiveCharts.Wpf" Version="0.9.7" />
+    <PackageReference Include="LoadingIndicators.WPF" Version="0.0.1" />
+    <PackageReference Include="log4net" Version="2.0.17" />
+    <PackageReference Include="MahApps.Metro" Version="2.4.10" />
+    <PackageReference Include="MaterialDesignThemes" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.3" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.77" />
+    <PackageReference Include="MVTec.HalconDotNet" Version="24111.0.0" />
+    <PackageReference Include="MVTec.HalconDotNet-Windows" Version="24111.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.15" />
+    <PackageReference Include="System.Data.SQLite" Version="1.0.118" />
+    <PackageReference Include="System.IO.Ports" Version="8.0.0" />
+    <PackageReference Include="System.Management" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\Icons\add.png" />
+    <Resource Include="Assets\Icons\alert.png" />
+    <Resource Include="Assets\Icons\as.png" />
+    <Resource Include="Assets\Icons\chat\bubble-chat.png" />
+    <Resource Include="Assets\Icons\chat\chat_send_button.png" />
+    <Resource Include="Assets\Icons\chat\chat_send_button2.png" />
+    <Resource Include="Assets\Icons\check.png" />
+    <Resource Include="Assets\Icons\copy.png" />
+    <Resource Include="Assets\Icons\Logos\deepseers.ico" />
+    <Resource Include="Assets\Icons\Logos\deepseers2.png" />
+    <Resource Include="Assets\Icons\Logos\deepseers.png" />
+    <Resource Include="Assets\Icons\folder-open.png" />
+    <Resource Include="Assets\Icons\Logos\genesem.png" />
+    <Resource Include="Assets\Icons\grayValue.png" />
+    <Resource Include="Assets\Icons\grid.png" />
+    <Resource Include="Assets\Icons\histogram.png" />
+    <Resource Include="Assets\Icons\info.png" />
+    <Resource Include="Assets\Icons\Lga\Chamfer.png" />
+    <Resource Include="Assets\Icons\Lga\Notch.png" />
+    <Resource Include="Assets\Icons\Lga\smallPad.png" />
+    <Resource Include="Assets\Icons\line-profile.png" />
+    <Resource Include="Assets\Icons\menu-dots-vertical.png" />
+    <Resource Include="Assets\Icons\menu-dots.png" />
+    <Resource Include="Assets\Icons\overlay.png" />
+    <Resource Include="Assets\Icons\pin.png" />
+    <Resource Include="Assets\Icons\play.png" />
+    <Resource Include="Assets\Icons\Qfn\Chamfer.png" />
+    <Resource Include="Assets\Icons\Qfn\Notch.png" />
+    <Resource Include="Assets\Icons\Qfn\smallPad.png" />
+    <Resource Include="Assets\Icons\rename.png" />
+    <Resource Include="Assets\Icons\reset-zoom.png" />
+    <Resource Include="Assets\Icons\retry.png" />
+    <Resource Include="Assets\Icons\ruler.png" />
+    <Resource Include="Assets\Icons\run.png" />
+    <Resource Include="Assets\Icons\save.png" />
+    <Resource Include="Assets\Icons\setup.png" />
+    <Resource Include="Assets\Icons\Sidebar\3point.png" />
+    <Resource Include="Assets\Icons\Sidebar\as.png" />
+    <Resource Include="Assets\Icons\Sidebar\bga.png" />
+    <Resource Include="Assets\Icons\Sidebar\calibration.png" />
+    <Resource Include="Assets\Icons\Sidebar\database-index.png" />
+    <Resource Include="Assets\Icons\Sidebar\db-index.png" />
+    <Resource Include="Assets\Icons\Sidebar\db-pkg.png" />
+    <Resource Include="Assets\Icons\Sidebar\db-sheet.png" />
+    <Resource Include="Assets\Icons\Sidebar\exit.png" />
+    <Resource Include="Assets\Icons\Sidebar\history.png" />
+    <Resource Include="Assets\Icons\Sidebar\ini.png" />
+    <Resource Include="Assets\Icons\Sidebar\io.png" />
+    <Resource Include="Assets\Icons\Sidebar\jig.png" />
+    <Resource Include="Assets\Icons\Sidebar\lga.png" />
+    <Resource Include="Assets\Icons\Sidebar\light.png" />
+    <Resource Include="Assets\Icons\Sidebar\lot-data.png" />
+    <Resource Include="Assets\Icons\Sidebar\mark.png" />
+    <Resource Include="Assets\Icons\Sidebar\qfn.png" />
+    <Resource Include="Assets\Icons\Sidebar\save.png" />
+    <Resource Include="Assets\Icons\Sidebar\security.png" />
+    <Resource Include="Assets\Icons\Sidebar\setting.png" />
+    <Resource Include="Assets\Icons\Sidebar\test.png" />
+    <Resource Include="Assets\Icons\stop.png" />
+    <Resource Include="Assets\Icons\Sidebar\system-usage.png" />
+    <Resource Include="Assets\Icons\Sidebar\strip.png" />
+    <Resource Include="Assets\Icons\text.png" />
+    <Resource Include="Assets\Icons\Tracker\arrow-down-left.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\Icons\Tracker\arrow-down-right.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\Icons\Tracker\arrow-left.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\Icons\Tracker\arrow-right.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\Icons\Tracker\arrow-up-left.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\Icons\Tracker\arrow-up-right.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\Icons\Tracker\arrow-up.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\Icons\trash.png" />
+    <Resource Include="Assets\Icons\undo.png" />
+    <Resource Include="Assets\Icons\x.png">
+      <CopyToOutputDirectory></CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
+    <Exec Command="
+  xcopy /s /y &quot;$(ProjectDir)Assets\*.*&quot; &quot;$(TargetDir)Assets\&quot;&#xD;&#xA;
+  if not exist &quot;$(TargetDir)DB&quot; mkdir &quot;$(TargetDir)DB&quot;&#xD;&#xA;
+  if not exist &quot;$(TargetDir)DB\Recipes&quot; mkdir &quot;$(TargetDir)DB\Recipes&quot;&#xD;&#xA;
+  if not exist &quot;$(TargetDir)DB\Calibration&quot; mkdir &quot;$(TargetDir)DB\Calibration&quot;&#xD;&#xA;
+  if not exist &quot;$(TargetDir)DB\InspectionResults&quot; mkdir &quot;$(TargetDir)DB\InspectionResults&quot;" />
+  </Target>
+
+
+
+  <ItemGroup>
+    <EditorConfigFiles Remove="C:\Users\gyeongmin\Documents\GitHub\gvision-wpf\GvisionWpf\.editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\Icons\Logos\genesem.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\Icons\Tracker\arrow-down.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\Icons\zoom-in.png" />
+    <Resource Include="Assets\Icons\zoom-out.png" />
+    <Resource Include="Assets\Icons\zoom.png" />
+    <Resource Include="Assets\Tutor\package_gridroi_example.png" />
+    <Resource Include="Assets\UiImages\find-mark-guide.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="C:\Users\gyeongmin\Documents\GitHub\gvision-wpf\GvisionWpf\.editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="MainWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <None Update="Assets\Icons\Logos\genesem.ico">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Update="Assets\Icons\Logos\genesem.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Update="kb\ui_anchor_kb.jsonl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="log4net.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Assets\SampleImages\Mapping\" />
+    <Folder Include="Assets\SampleImages\BarCode\" />
+    <Folder Include="Assets\SampleImages\TopBarCode\" />
+    <Folder Include="Assets\SampleImages\Prs\" />
+  </ItemGroup>
+
+</Project>

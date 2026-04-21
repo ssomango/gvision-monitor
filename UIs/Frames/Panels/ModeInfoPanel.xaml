@@ -1,0 +1,70 @@
+﻿<UserControl
+    x:Class="GVisionWpf.UIs.Frames.Panels.ModeInfoPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:GVisionWpf.UIs.Frames.Panels"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:utils="clr-namespace:GVisionWpf.Utils"
+    xmlns:viewModels="clr-namespace:GVisionWpf.UIs.ViewModels"
+    d:DataContext="{d:DesignInstance Type=viewModels:CurrentSettingViewmodel}"
+    d:DesignHeight="30"
+    d:DesignWidth="1200"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <Style TargetType="Label">
+            <Setter Property="BorderThickness" Value="0,1,1,1" />
+            <Setter Property="BorderBrush" Value="Black" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <utils:EnumToUpperConverter x:Key="EnumToUpperConverter" />
+        <utils:ColorToBrushConverter x:Key="ColorToBrushConverter" />
+        <utils:EnumDescriptionConverter x:Key="EnumDescriptionConverter" />
+    </UserControl.Resources>
+
+    <Grid Background="White">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="1.5*" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="1.5*" />
+        </Grid.ColumnDefinitions>
+
+        <!--  Setting Info Section  -->
+        <Label
+            Grid.Column="0"
+            Background="Black"
+            Content="Setting Info"
+            Foreground="White" />
+
+        <!--  Inspection Mode Section  -->
+        <Label
+            Grid.Column="1"
+            Padding="2,0"
+            Background="#dddddd"
+            Content="Inspection mode" />
+
+        <Label
+            Grid.Column="2"
+            Background="White"
+            Content="{Binding InspectionMode, Converter={StaticResource EnumToUpperConverter}}"
+            Foreground="{Binding InspectionModeColor, Converter={StaticResource ColorToBrushConverter}}" />
+
+        <!--  Image Save Section  -->
+
+        <Label
+            Grid.Column="3"
+            Padding="2,0"
+            Background="#dddddd"
+            Content="Image Save" />
+        <Label
+            Grid.Column="4"
+            Background="White"
+            Content="{Binding SaveOption, Converter={StaticResource EnumDescriptionConverter}}"
+            Foreground="{Binding SaveOptionColor, Converter={StaticResource ColorToBrushConverter}}" />
+    </Grid>
+</UserControl>

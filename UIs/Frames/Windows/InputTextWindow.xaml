@@ -1,0 +1,71 @@
+﻿<Window
+    x:Class="GVisionWpf.UIs.Frames.Windows.InputTextWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:GVisionWpf.UIs.Frames.Windows"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="InputTextWindow"
+    Width="500"
+    Height="100"
+    ResizeMode="NoResize"
+    WindowStartupLocation="CenterScreen"
+    WindowStyle="None"
+    mc:Ignorable="d">
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="30" ResizeBorderThickness="5" />
+    </WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Background" Value="WhiteSmoke" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="#acacac" />
+        </Style>
+        <Style TargetType="Label">
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="MinWidth" Value="50" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+        </Style>
+    </Window.Resources>
+
+    <Border BorderBrush="#acacac" BorderThickness="1">
+        <DockPanel>
+            <StackPanel
+                Height="30"
+                DockPanel.Dock="Top"
+                Orientation="Horizontal">
+                <Label Name="xTitle" Content="Input">
+                    <Label.Background>
+                        <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ControlLightLightColorKey}}" />
+                    </Label.Background>
+                </Label>
+            </StackPanel>
+            <StackPanel
+                Height="40"
+                Margin="5,5,4,4"
+                HorizontalAlignment="Center"
+                DockPanel.Dock="Top"
+                Orientation="Horizontal">
+                <Label Name="xLabel" Content="New" />
+                <Border Width="10" />
+                <TextBox Name="xTextBox" Width="250" />
+                <Border Width="20" />
+                <Button
+                    Width="60"
+                    Click="ok_Click"
+                    Content="OK" />
+                <Border Width="10" />
+                <Button
+                    Width="60"
+                    Click="exitBtn_Click"
+                    Content="Cancel" />
+            </StackPanel>
+        </DockPanel>
+    </Border>
+</Window>

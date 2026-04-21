@@ -1,0 +1,20 @@
+﻿<Page
+    x:Class="GVisionWpf.UIs.Frames.Pages.RunPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:GVisionWpf.UIs.Frames.Pages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="RunPage"
+    d:DesignHeight="810"
+    d:DesignWidth="1130"
+    mc:Ignorable="d">
+    <Grid
+        x:Name="xRunRoot"
+        AutomationProperties.AutomationId="RUN_PAGE_ROOT">
+        <Border
+            x:Name="xRunSurface"
+            Background="Transparent"
+            AutomationProperties.AutomationId="RUN_PANEL_SURFACE" />
+    </Grid>
+</Page>
