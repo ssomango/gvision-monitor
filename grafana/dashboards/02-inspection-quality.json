@@ -1,0 +1,90 @@
+{
+  "title": "02. 검사 품질 분석",
+  "uid": "gvision-quality",
+  "tags": ["gvision", "inspection"],
+  "refresh": "30s",
+  "time": { "from": "now-3h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "수율 (Yield) 추이 — 1분 집계",
+      "description": "PASS건수 / 전체건수 × 100. 임계선 98% 아래면 확인 필요.",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 9 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 90, "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null,  "color": "red" },
+              { "value": 98,    "color": "yellow" },
+              { "value": 99,    "color": "green" }
+            ]
+          },
+          "custom": { "lineWidth": 2, "fillOpacity": 10 }
+        }
+      },
+      "targets": [{
+        "datasource": { "uid": "gvision_sqlite" },
+        "refId": "A",
+        "rawQueryText": "SELECT strftime('%Y-%m-%dT%H:%M:00', StartTime) AS time, ROUND(SUM(CASE WHEN Item = 'PASS' THEN 1.0 ELSE 0 END) / COUNT(*) * 100, 2) AS yield FROM inspection_results WHERE StartTime >= datetime('now', '-3 hours') GROUP BY strftime('%Y-%m-%dT%H:%M:00', StartTime) ORDER BY time ASC",
+        "timeColumns": ["time"]
+      }]
+    },
+    {
+      "id": 2,
+      "title": "평균 처리시간 (Duration) — ms",
+      "description": "검사 1건당 소요시간. 급증 시 카메라/조명 이상 의심.",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 9, "w": 16, "h": 8 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": { "lineWidth": 2, "fillOpacity": 10 }
+        }
+      },
+      "targets": [{
+        "datasource": { "uid": "gvision_sqlite" },
+        "refId": "A",
+        "rawQueryText": "SELECT strftime('%Y-%m-%dT%H:%M:00', StartTime) AS time, ROUND(AVG(Duration), 1) AS avg_ms, MAX(Duration) AS max_ms FROM inspection_results WHERE StartTime >= datetime('now', '-3 hours') GROUP BY strftime('%Y-%m-%dT%H:%M:00', StartTime) ORDER BY time ASC",
+        "timeColumns": ["time"]
+      }]
+    },
+    {
+      "id": 3,
+      "title": "불량 유형별 건수",
+      "description": "현재 Lot 내 불량 원인 분포.",
+      "type": "piechart",
+      "gridPos": { "x": 16, "y": 9, "w": 8, "h": 8 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "targets": [{
+        "datasource": { "uid": "gvision_sqlite" },
+        "refId": "A",
+        "rawQueryText": "SELECT Item AS error_type, COUNT(*) AS count FROM inspection_results WHERE Item != 'PASS' AND StartTime >= datetime('now', '-3 hours') GROUP BY Item ORDER BY count DESC LIMIT 10",
+        "timeColumns": []
+      }]
+    },
+    {
+      "id": 4,
+      "title": "오프셋 드리프트 (XOffset / YOffset)",
+      "description": "정렬 오프셋 변화 추이. 한쪽으로 계속 이동하면 Alignment 이상.",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 17, "w": 24, "h": 8 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "fieldConfig": {
+        "defaults": { "unit": "none", "custom": { "lineWidth": 1 } }
+      },
+      "targets": [{
+        "datasource": { "uid": "gvision_sqlite" },
+        "refId": "A",
+        "rawQueryText": "SELECT strftime('%Y-%m-%dT%H:%M:00', StartTime) AS time, ROUND(AVG(XOffset),3) AS x_offset, ROUND(AVG(YOffset),3) AS y_offset FROM inspection_results WHERE StartTime >= datetime('now', '-3 hours') GROUP BY strftime('%Y-%m-%dT%H:%M:00', StartTime) ORDER BY time ASC",
+        "timeColumns": ["time"]
+      }]
+    }
+  ],
+  "schemaVersion": 39
+}

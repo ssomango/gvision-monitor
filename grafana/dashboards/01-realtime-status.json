@@ -1,0 +1,106 @@
+{
+  "title": "01. 장비 실시간 상태",
+  "uid": "gvision-status",
+  "tags": ["gvision", "status"],
+  "refresh": "5s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "장비 모드",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "uid": "gvision_api" },
+      "options": {
+        "colorMode": "background",
+        "textMode": "value",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "Run":   { "text": "RUN",   "color": "green" } } },
+            { "type": "value", "options": { "SetUp": { "text": "SETUP", "color": "yellow" } } }
+          ],
+          "thresholds": { "mode": "absolute", "steps": [{ "value": null, "color": "gray" }] }
+        }
+      },
+      "targets": [{
+        "datasource": { "uid": "gvision_api" },
+        "refId": "A",
+        "type": "json",
+        "url": "/api/status",
+        "root_selector": "",
+        "columns": [{ "selector": "runningMode", "text": "모드", "type": "string" }]
+      }]
+    },
+    {
+      "id": 2,
+      "title": "현재 Recipe",
+      "type": "stat",
+      "gridPos": { "x": 4, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "uid": "gvision_api" },
+      "options": { "colorMode": "none", "textMode": "value", "graphMode": "none" },
+      "targets": [{
+        "datasource": { "uid": "gvision_api" },
+        "refId": "A",
+        "type": "json",
+        "url": "/api/status",
+        "columns": [{ "selector": "recipeName", "text": "Recipe", "type": "string" }]
+      }]
+    },
+    {
+      "id": 3,
+      "title": "현재 Lot 번호",
+      "type": "stat",
+      "gridPos": { "x": 10, "y": 0, "w": 7, "h": 4 },
+      "datasource": { "uid": "gvision_api" },
+      "options": { "colorMode": "none", "textMode": "value", "graphMode": "none" },
+      "targets": [{
+        "datasource": { "uid": "gvision_api" },
+        "refId": "A",
+        "type": "json",
+        "url": "/api/status",
+        "columns": [{ "selector": "lotNo", "text": "Lot", "type": "string" }]
+      }]
+    },
+    {
+      "id": 4,
+      "title": "모바일 연결 수",
+      "type": "stat",
+      "gridPos": { "x": 17, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "uid": "gvision_api" },
+      "options": { "colorMode": "value", "textMode": "value", "graphMode": "none" },
+      "targets": [{
+        "datasource": { "uid": "gvision_api" },
+        "refId": "A",
+        "type": "json",
+        "url": "/api/status",
+        "columns": [{ "selector": "connectedClients", "text": "연결수", "type": "number" }]
+      }]
+    },
+    {
+      "id": 5,
+      "title": "최근 이벤트 로그",
+      "type": "table",
+      "gridPos": { "x": 0, "y": 4, "w": 24, "h": 12 },
+      "datasource": { "uid": "gvision_api" },
+      "options": { "sortBy": [{ "displayName": "Time", "desc": true }] },
+      "targets": [{
+        "datasource": { "uid": "gvision_api" },
+        "refId": "A",
+        "type": "json",
+        "url": "/api/events?limit=30",
+        "root_selector": "events",
+        "columns": [
+          { "selector": "Time",        "text": "시각",     "type": "timestamp" },
+          { "selector": "LogType",     "text": "구분",     "type": "number" },
+          { "selector": "Camera",      "text": "카메라",   "type": "string" },
+          { "selector": "Inspection",  "text": "검사타입", "type": "string" },
+          { "selector": "Description", "text": "내용",     "type": "string" }
+        ]
+      }]
+    }
+  ],
+  "schemaVersion": 39
+}

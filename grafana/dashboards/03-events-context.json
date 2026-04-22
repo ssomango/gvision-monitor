@@ -1,0 +1,91 @@
+{
+  "title": "03. 이벤트 & 알람 맥락",
+  "uid": "gvision-events",
+  "tags": ["gvision", "events", "alert"],
+  "refresh": "10s",
+  "time": { "from": "now-2h", "to": "now" },
+  "annotations": {
+    "list": [
+      {
+        "name": "LOT 이벤트",
+        "datasource": { "uid": "gvision_sqlite" },
+        "enable": true,
+        "hide": false,
+        "iconColor": "blue",
+        "rawQuery": "SELECT Time AS time, Description AS text, 'LOT' AS tags FROM histories WHERE LogType = 4 AND Time >= datetime('now', '-2 hours') ORDER BY Time ASC",
+        "timeColumns": ["time"]
+      },
+      {
+        "name": "Recipe 변경",
+        "datasource": { "uid": "gvision_sqlite" },
+        "enable": true,
+        "hide": false,
+        "iconColor": "purple",
+        "rawQuery": "SELECT Time AS time, Description AS text, 'Recipe' AS tags FROM histories WHERE LogType = 5 AND Time >= datetime('now', '-2 hours') ORDER BY Time ASC",
+        "timeColumns": ["time"]
+      },
+      {
+        "name": "시스템 이벤트",
+        "datasource": { "uid": "gvision_sqlite" },
+        "enable": true,
+        "hide": false,
+        "iconColor": "red",
+        "rawQuery": "SELECT Time AS time, Description AS text, 'System' AS tags FROM histories WHERE LogType = 1 AND Time >= datetime('now', '-2 hours') ORDER BY Time ASC",
+        "timeColumns": ["time"]
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "수율 + 이벤트 Annotation (알람 발생 맥락)",
+      "description": "이벤트가 발생한 시점을 수율 그래프 위에 마킹. 어떤 이벤트 이후 수율이 떨어졌는지 한눈에 확인.",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 10 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 90, "max": 100,
+          "custom": { "lineWidth": 2, "fillOpacity": 15 }
+        }
+      },
+      "targets": [{
+        "datasource": { "uid": "gvision_sqlite" },
+        "refId": "A",
+        "rawQueryText": "SELECT strftime('%Y-%m-%dT%H:%M:00', StartTime) AS time, ROUND(SUM(CASE WHEN Item = 'PASS' THEN 1.0 ELSE 0 END) / COUNT(*) * 100, 2) AS yield FROM inspection_results WHERE StartTime >= datetime('now', '-2 hours') GROUP BY strftime('%Y-%m-%dT%H:%M:00', StartTime) ORDER BY time ASC",
+        "timeColumns": ["time"]
+      }]
+    },
+    {
+      "id": 2,
+      "title": "이벤트 타임라인 전체",
+      "description": "LogType: 1=System, 2=Inspection, 3=DB, 4=LOT, 5=Recipe",
+      "type": "table",
+      "gridPos": { "x": 0, "y": 10, "w": 14, "h": 12 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "options": { "sortBy": [{ "displayName": "Time", "desc": true }] },
+      "targets": [{
+        "datasource": { "uid": "gvision_sqlite" },
+        "refId": "A",
+        "rawQueryText": "SELECT Time, CASE LogType WHEN 1 THEN 'System' WHEN 2 THEN 'Inspection' WHEN 4 THEN 'LOT' WHEN 5 THEN 'Recipe' ELSE CAST(LogType AS TEXT) END AS 구분, Camera AS 카메라, substr(Description, 1, 80) AS 내용 FROM histories WHERE Time >= datetime('now', '-2 hours') ORDER BY Time DESC LIMIT 50",
+        "timeColumns": ["Time"]
+      }]
+    },
+    {
+      "id": 3,
+      "title": "구분별 이벤트 빈도",
+      "description": "어떤 종류의 이벤트가 많이 발생했는지.",
+      "type": "barchart",
+      "gridPos": { "x": 14, "y": 10, "w": 10, "h": 12 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "targets": [{
+        "datasource": { "uid": "gvision_sqlite" },
+        "refId": "A",
+        "rawQueryText": "SELECT CASE LogType WHEN 1 THEN 'System' WHEN 2 THEN 'Inspection' WHEN 4 THEN 'LOT' WHEN 5 THEN 'Recipe' ELSE CAST(LogType AS TEXT) END AS 구분, COUNT(*) AS count FROM histories WHERE Time >= datetime('now', '-2 hours') GROUP BY LogType ORDER BY count DESC",
+        "timeColumns": []
+      }]
+    }
+  ],
+  "schemaVersion": 39
+}
