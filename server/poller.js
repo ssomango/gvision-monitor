@@ -1,0 +1,153 @@
+/**
+ * poller.js — GvisionWpf 상태 폴링 + 새 이벤트 감지
+ *
+ * 두 가지를 주기적으로 합니다:
+ *   1. GvisionWpf API(/api/status) 폴링 → 상태 변경 시 WebSocket push
+ *   2. SQLite histories 테이블 폴링 → 새 row 감지 시 WebSocket push
+ *
+ * 왜 두 개를 따로 하냐?
+ *   - 상태(모드/레시피/Lot)는 GvisionWpf API에서 가장 정확하게 옴
+ *   - 이벤트(에러/Teaching 변경 등)는 SQLite에 기록됨
+ */
+
+const axios = require('axios');
+const config = require('./config');
+const db = require('./db');
+const wsManager = require('./websocket');
+
+// 마지막으로 감지한 상태 (연결 시 즉시 전송에 사용)
+let lastStatus = null;
+
+// 마지막으로 읽은 history Id (이후 새로 추가된 것만 감지)
+let lastHistoryId = 0;
+
+// ALERT로 분류할 LogType 값
+// GvisionWpf ELog enum: SystemLogs=1, InspectionLogs=2, DatabaseLogs=3, LOTLogs=4, RecipeLogs=5
+const ALERT_LOG_TYPES = [1, 2]; // SystemLogs(에러), InspectionLogs(검사실패)
+
+/**
+ * GvisionWpf /api/status 한 번 호출
+ */
+async function fetchGvisionStatus() {
+  try {
+    const res = await axios.get(`${config.GVISION_API_URL}/api/status`, {
+      timeout: 3000,
+    });
+    return res.data;
+  } catch (err) {
+    // GvisionWpf가 꺼져있으면 여기서 에러남 → 그냥 null 반환
+    return null;
+  }
+}
+
+/**
+ * 상태 변경 여부 비교
+ * 모드/레시피/Lot번호 중 하나라도 바뀌면 변경으로 판단
+ */
+function hasStatusChanged(prev, next) {
+  if (!prev || !next) return true;
+  return (
+    prev.runningMode !== next.runningMode ||
+    prev.recipeName  !== next.recipeName  ||
+    prev.lotNo       !== next.lotNo
+  );
+}
+
+/**
+ * 상태 폴링 — POLL_INTERVAL_MS마다 실행
+ */
+async function pollStatus() {
+  const status = await fetchGvisionStatus();
+
+  if (!status) {
+    // GvisionWpf 꺼진 상태
+    if (lastStatus !== null) {
+      lastStatus = null;
+      wsManager.broadcast({ type: 'GVISION_OFFLINE', data: {} });
+    }
+    return;
+  }
+
+  if (hasStatusChanged(lastStatus, status)) {
+    console.log(`[Poller] 상태 변경 감지: mode=${status.runningMode}, recipe=${status.recipeName}, lot=${status.lotNo}`);
+    lastStatus = status;
+    wsManager.broadcast({ type: 'STATUS', data: status });
+  }
+}
+
+/**
+ * 이벤트 폴링 — EVENT_POLL_INTERVAL_MS마다 실행
+ * histories 테이블에서 lastHistoryId 이후에 추가된 row를 찾음
+ */
+function pollEvents() {
+  try {
+    const dbInstance = require('better-sqlite3');
+    const fs = require('fs');
+
+    if (!fs.existsSync(config.DB_PATH)) return;
+
+    // lastHistoryId 초기화 (첫 실행 시)
+    if (lastHistoryId === 0) {
+      lastHistoryId = db.getLatestHistoryId();
+      console.log(`[Poller] 이벤트 기준 Id 초기화: ${lastHistoryId}`);
+      return;
+    }
+
+    // lastHistoryId 이후에 추가된 이벤트 조회
+    const Database = require('better-sqlite3');
+    const fs2 = require('fs');
+    if (!fs2.existsSync(config.DB_PATH)) return;
+
+    const tempDb = new Database(config.DB_PATH, { readonly: true });
+    const newEvents = tempDb.prepare(`
+      SELECT Id, Time, Package, LotId, Camera, Inspection, LogType, Description, ImagePath
+      FROM histories
+      WHERE Id > ?
+      ORDER BY Id ASC
+    `).all(lastHistoryId);
+    tempDb.close();
+
+    if (newEvents.length === 0) return;
+
+    // 새 이벤트를 하나씩 WebSocket으로 push
+    for (const event of newEvents) {
+      const isAlert = ALERT_LOG_TYPES.includes(event.LogType);
+      const msgType = isAlert ? 'ALERT' : 'NEW_EVENT';
+
+      console.log(`[Poller] 새 이벤트 (${msgType}): Id=${event.Id}, LogType=${event.LogType}, ${event.Description?.slice(0, 50)}`);
+
+      wsManager.broadcast({ type: msgType, data: event });
+    }
+
+    // 마지막 Id 업데이트
+    lastHistoryId = newEvents[newEvents.length - 1].Id;
+
+  } catch (err) {
+    console.error('[Poller] 이벤트 폴링 오류:', err.message);
+  }
+}
+
+/**
+ * 폴링 시작
+ * index.js에서 서버 시작 시 한 번 호출
+ */
+function start() {
+  console.log(`[Poller] 상태 폴링 시작 (${config.POLL_INTERVAL_MS}ms 간격)`);
+  console.log(`[Poller] 이벤트 폴링 시작 (${config.EVENT_POLL_INTERVAL_MS}ms 간격)`);
+
+  // 즉시 한 번 실행 후 인터벌 설정
+  pollStatus();
+  pollEvents();
+
+  setInterval(pollStatus, config.POLL_INTERVAL_MS);
+  setInterval(pollEvents, config.EVENT_POLL_INTERVAL_MS);
+}
+
+/**
+ * 마지막으로 받은 상태 반환 (WebSocket 신규 연결 시 즉시 전송에 사용)
+ */
+function getLastStatus() {
+  return lastStatus;
+}
+
+module.exports = { start, getLastStatus };
