@@ -30,7 +30,7 @@
       "targets": [{
         "datasource": { "uid": "gvision_sqlite" },
         "refId": "A",
-        "rawQueryText": "SELECT strftime('%Y-%m-%dT%H:%M:00', StartTime) AS time, ROUND(SUM(CASE WHEN Item = 'PASS' THEN 1.0 ELSE 0 END) / COUNT(*) * 100, 2) AS yield FROM inspection_results WHERE StartTime >= datetime('now', '-3 hours') GROUP BY strftime('%Y-%m-%dT%H:%M:00', StartTime) ORDER BY time ASC",
+        "rawQueryText": "SELECT strftime('%Y-%m-%dT%H:%M:00Z', StartTIme) AS time, ROUND(SUM(CASE WHEN Item = 'PASS' THEN 1.0 ELSE 0 END) / COUNT(*) * 100, 2) AS yield FROM inspection_results WHERE StartTIme >= datetime('now', '-3 hours') GROUP BY strftime('%Y-%m-%dT%H:%M:00', StartTIme) ORDER BY time ASC",
         "timeColumns": ["time"]
       }]
     },
@@ -50,7 +50,7 @@
       "targets": [{
         "datasource": { "uid": "gvision_sqlite" },
         "refId": "A",
-        "rawQueryText": "SELECT strftime('%Y-%m-%dT%H:%M:00', StartTime) AS time, ROUND(AVG(Duration), 1) AS avg_ms, MAX(Duration) AS max_ms FROM inspection_results WHERE StartTime >= datetime('now', '-3 hours') GROUP BY strftime('%Y-%m-%dT%H:%M:00', StartTime) ORDER BY time ASC",
+        "rawQueryText": "SELECT strftime('%Y-%m-%dT%H:%M:00Z', StartTIme) AS time, ROUND(AVG(Duration), 1) AS avg_ms, MAX(Duration) AS max_ms FROM inspection_results WHERE StartTIme >= datetime('now', '-3 hours') GROUP BY strftime('%Y-%m-%dT%H:%M:00', StartTIme) ORDER BY time ASC",
         "timeColumns": ["time"]
       }]
     },
@@ -81,7 +81,7 @@
       "targets": [{
         "datasource": { "uid": "gvision_sqlite" },
         "refId": "A",
-        "rawQueryText": "SELECT strftime('%Y-%m-%dT%H:%M:00', StartTime) AS time, ROUND(AVG(XOffset),3) AS x_offset, ROUND(AVG(YOffset),3) AS y_offset FROM inspection_results WHERE StartTime >= datetime('now', '-3 hours') GROUP BY strftime('%Y-%m-%dT%H:%M:00', StartTime) ORDER BY time ASC",
+        "rawQueryText": "SELECT strftime('%Y-%m-%dT%H:%M:00Z', StartTIme) AS time, ROUND(AVG(XOffset),3) AS x_offset, ROUND(AVG(YOffset),3) AS y_offset FROM inspection_results WHERE StartTIme >= datetime('now', '-3 hours') GROUP BY strftime('%Y-%m-%dT%H:%M:00', StartTIme) ORDER BY time ASC",
         "timeColumns": ["time"]
       }]
     }

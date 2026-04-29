@@ -1,39 +1,17 @@
-# Build output
-bin/
-obj/
+# Node.js
+node_modules/
+server/node_modules/
 
-# Visual Studio
-.vs/
-*.user
-*.suo
-*.userosscache
-*.sln.docstates
-*.DotSettings.user
+# SQLite
+*.db
+*.db-shm
+*.db-wal
 
-# NuGet
-packages/
-*.nupkg
-project.lock.json
-project.fragment.lock.json
-artifacts/
-
-# Logs
-*.log
-log4net.config.bak
+# 임시 파일
+$null
+.env
 
 # OS
-Thumbs.db
-Desktop.ini
 .DS_Store
-
-# DB (로컬 SQLite - 공유 불필요)
-DB/*.db
-DB/*.db-shm
-DB/*.db-wal
-
-# 서버/모니터링 앱 (나중에 추가될 폴더)
-server/node_modules/
-web/node_modules/
-web/dist/
-mobile/.dart_tool/
-mobile/build/
+Thumbs.db
+.vs/
