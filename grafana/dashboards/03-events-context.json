@@ -12,7 +12,7 @@
         "enable": true,
         "hide": false,
         "iconColor": "blue",
-        "rawQuery": "SELECT Time AS time, Description AS text, 'LOT' AS tags FROM histories WHERE LogType = 4 AND Time >= datetime('now', '-2 hours') ORDER BY Time ASC",
+        "rawQuery": "SELECT strftime('%Y-%m-%dT%H:%M:%SZ', substr(Time,1,19)) AS time, Description AS text, 'LOT' AS tags FROM histories WHERE LogType = 4 AND Time >= datetime('now', '-2 hours') ORDER BY Time ASC",
         "timeColumns": ["time"]
       },
       {
@@ -21,7 +21,7 @@
         "enable": true,
         "hide": false,
         "iconColor": "purple",
-        "rawQuery": "SELECT Time AS time, Description AS text, 'Recipe' AS tags FROM histories WHERE LogType = 5 AND Time >= datetime('now', '-2 hours') ORDER BY Time ASC",
+        "rawQuery": "SELECT strftime('%Y-%m-%dT%H:%M:%SZ', substr(Time,1,19)) AS time, Description AS text, 'Recipe' AS tags FROM histories WHERE LogType = 5 AND Time >= datetime('now', '-2 hours') ORDER BY Time ASC",
         "timeColumns": ["time"]
       },
       {
@@ -30,7 +30,7 @@
         "enable": true,
         "hide": false,
         "iconColor": "red",
-        "rawQuery": "SELECT Time AS time, Description AS text, 'System' AS tags FROM histories WHERE LogType = 1 AND Time >= datetime('now', '-2 hours') ORDER BY Time ASC",
+        "rawQuery": "SELECT strftime('%Y-%m-%dT%H:%M:%SZ', substr(Time,1,19)) AS time, Description AS text, 'System' AS tags FROM histories WHERE LogType = 1 AND Time >= datetime('now', '-2 hours') ORDER BY Time ASC",
         "timeColumns": ["time"]
       }
     ]
@@ -53,7 +53,7 @@
       "targets": [{
         "datasource": { "uid": "gvision_sqlite" },
         "refId": "A",
-        "rawQueryText": "SELECT strftime('%Y-%m-%dT%H:%M:00', StartTime) AS time, ROUND(SUM(CASE WHEN Item = 'PASS' THEN 1.0 ELSE 0 END) / COUNT(*) * 100, 2) AS yield FROM inspection_results WHERE StartTime >= datetime('now', '-2 hours') GROUP BY strftime('%Y-%m-%dT%H:%M:00', StartTime) ORDER BY time ASC",
+        "rawQueryText": "SELECT strftime('%Y-%m-%dT%H:%M:00Z', StartTIme) AS time, ROUND(SUM(CASE WHEN Item = 'PASS' THEN 1.0 ELSE 0 END) / COUNT(*) * 100, 2) AS yield FROM inspection_results WHERE StartTIme >= datetime('now', '-2 hours') GROUP BY strftime('%Y-%m-%dT%H:%M:00', StartTIme) ORDER BY time ASC",
         "timeColumns": ["time"]
       }]
     },
@@ -68,7 +68,7 @@
       "targets": [{
         "datasource": { "uid": "gvision_sqlite" },
         "refId": "A",
-        "rawQueryText": "SELECT Time, CASE LogType WHEN 1 THEN 'System' WHEN 2 THEN 'Inspection' WHEN 4 THEN 'LOT' WHEN 5 THEN 'Recipe' ELSE CAST(LogType AS TEXT) END AS 구분, Camera AS 카메라, substr(Description, 1, 80) AS 내용 FROM histories WHERE Time >= datetime('now', '-2 hours') ORDER BY Time DESC LIMIT 50",
+        "rawQueryText": "SELECT strftime('%Y-%m-%dT%H:%M:%SZ', substr(Time,1,19)) AS Time, CASE LogType WHEN 1 THEN 'System' WHEN 2 THEN 'Inspection' WHEN 4 THEN 'LOT' WHEN 5 THEN 'Recipe' ELSE CAST(LogType AS TEXT) END AS 구분, Camera AS 카메라, substr(Description, 1, 80) AS 내용 FROM histories WHERE Time >= datetime('now', '-2 hours') ORDER BY Time DESC LIMIT 50",
         "timeColumns": ["Time"]
       }]
     },

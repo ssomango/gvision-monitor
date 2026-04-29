@@ -17,7 +17,7 @@ module.exports = {
   // GvisionWpf는 실행 폴더 기준으로 DB/Schema/DS_HanaMicron.db 를 사용
   // 아래 경로는 실제 GvisionWpf 실행파일 위치에 맞게 수정 필요
   DB_PATH: path.join(
-    'C:/givision-AML/GvisionWpf/bin/Release/net8.0-windows',
+    'C:/givision-AML/GvisionWpf/bin/x64/Debug/net9.0-windows',
     'DB/Schema/DS_HanaMicron.db'
   ),
 

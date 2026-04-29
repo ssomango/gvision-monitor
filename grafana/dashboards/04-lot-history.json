@@ -42,7 +42,7 @@
       "targets": [{
         "datasource": { "uid": "gvision_sqlite" },
         "refId": "A",
-        "rawQueryText": "SELECT l.Id, l.LotNumber AS 'Lot 번호', l.Package AS Recipe, l.StartTime AS '시작', l.EndTime AS '종료', ROUND((julianday(l.EndTime) - julianday(l.StartTime)) * 24, 2) AS '소요(h)', COUNT(r.Id) AS 전체건수, ROUND(SUM(CASE WHEN r.Item = 'PASS' THEN 1.0 ELSE 0 END) / COUNT(r.Id) * 100, 1) AS '수율(%)' FROM lot l LEFT JOIN inspection_results r ON r.LotId = l.Id GROUP BY l.Id ORDER BY l.Id DESC LIMIT 20",
+        "rawQueryText": "SELECT l.Id, l.LotNumber AS 'Lot 번호', l.Package AS Recipe, strftime('%Y-%m-%dT%H:%M:%SZ', l.StartTime) AS '시작', strftime('%Y-%m-%dT%H:%M:%SZ', l.EndTime) AS '종료', ROUND((julianday(l.EndTime) - julianday(l.StartTime)) * 24, 2) AS '소요(h)', COUNT(r.Id) AS 전체건수, ROUND(SUM(CASE WHEN r.Item = 'PASS' THEN 1.0 ELSE 0 END) / COUNT(r.Id) * 100, 1) AS '수율(%)' FROM lot l LEFT JOIN inspection_results r ON r.LotId = l.Id GROUP BY l.Id ORDER BY l.Id DESC LIMIT 20",
         "timeColumns": ["시작", "종료"]
       }]
     }
