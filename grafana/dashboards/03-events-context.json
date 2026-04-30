@@ -1,99 +1,190 @@
 {
-  "title": "03. 이벤트 & 알람 맥락",
+  "title": "03. 이벤트 분석",
   "uid": "gvision-events",
   "tags": ["gvision", "events", "alert"],
   "refresh": "10s",
   "time": { "from": "now-24h", "to": "now" },
   "annotations": {
     "list": [
-      {
-        "name": "LOT 이벤트",
-        "datasource": { "uid": "gvision_sqlite" },
-        "enable": true,
-        "hide": false,
+      { "name": "LOT 이벤트", "datasource": { "uid": "gvision_sqlite" }, "enable": true, "hide": false,
         "iconColor": "blue",
         "rawQuery": "SELECT strftime('%Y-%m-%dT%H:%M:%SZ', datetime(substr(Time,1,19), '-9 hours')) AS time, substr(Description,1,60) AS text, 'LOT' AS tags FROM histories WHERE LogType = 4 AND Time >= datetime('now', '-15 hours') ORDER BY Time ASC",
-        "timeColumns": ["time"]
-      },
-      {
-        "name": "Recipe 변경",
-        "datasource": { "uid": "gvision_sqlite" },
-        "enable": true,
-        "hide": false,
+        "timeColumns": ["time"] },
+      { "name": "Recipe 변경", "datasource": { "uid": "gvision_sqlite" }, "enable": true, "hide": false,
         "iconColor": "purple",
         "rawQuery": "SELECT strftime('%Y-%m-%dT%H:%M:%SZ', datetime(substr(Time,1,19), '-9 hours')) AS time, substr(Description,1,60) AS text, 'Recipe' AS tags FROM histories WHERE LogType = 5 AND Time >= datetime('now', '-15 hours') ORDER BY Time ASC",
-        "timeColumns": ["time"]
-      },
-      {
-        "name": "시스템 이벤트",
-        "datasource": { "uid": "gvision_sqlite" },
-        "enable": true,
-        "hide": false,
+        "timeColumns": ["time"] },
+      { "name": "시스템 이벤트", "datasource": { "uid": "gvision_sqlite" }, "enable": true, "hide": false,
         "iconColor": "red",
         "rawQuery": "SELECT strftime('%Y-%m-%dT%H:%M:%SZ', datetime(substr(Time,1,19), '-9 hours')) AS time, trim(substr(Description,1,60)) AS text, 'System' AS tags FROM histories WHERE LogType = 1 AND Time >= datetime('now', '-15 hours') ORDER BY Time ASC",
-        "timeColumns": ["time"]
-      },
-      {
-        "name": "Teaching 변경",
-        "datasource": { "uid": "gvision_sqlite" },
-        "enable": true,
-        "hide": false,
+        "timeColumns": ["time"] },
+      { "name": "Teaching 변경", "datasource": { "uid": "gvision_sqlite" }, "enable": true, "hide": false,
         "iconColor": "orange",
         "rawQuery": "SELECT strftime('%Y-%m-%dT%H:%M:%SZ', datetime(substr(Time,1,19), '-9 hours')) AS time, CASE WHEN instr(Description,char(10))>0 THEN trim(substr(Description,1,instr(Description,char(10))-1)) ELSE trim(substr(Description,1,60)) END AS text, 'Teaching' AS tags FROM histories WHERE LogType = 5 AND Description LIKE '%Teaching%' AND Time >= datetime('now', '-15 hours') ORDER BY Time ASC",
-        "timeColumns": ["time"]
-      }
+        "timeColumns": ["time"] },
+      { "name": "시스템 예외 발생", "datasource": { "uid": "gvision_sqlite" }, "enable": true, "hide": false,
+        "iconColor": "dark-red",
+        "rawQuery": "SELECT strftime('%Y-%m-%dT%H:%M:%SZ', datetime(substr(Time,1,19), '-9 hours')) AS time, CASE WHEN Description LIKE '%CameraTimeout%' OR Description LIKE '%NotInitializedCamera%' OR Description LIKE '%PrsImageDequeue%' THEN '[카메라] ' WHEN Description LIKE '%Udp%' THEN '[통신] ' WHEN Description LIKE '%Vision%' THEN '[비전] ' WHEN Description LIKE '%NoIllumination%' OR Description LIKE '%UnknownLight%' THEN '[조명] ' WHEN Description LIKE '%WrongSetting%' OR Description LIKE '%WrongGrid%' THEN '[설정] ' ELSE '[시스템] ' END || substr(Description, instr(Description, '] ')+2, 50) AS text, 'exception' AS tags FROM histories WHERE LogType=1 AND Description LIKE '%Exception:%' AND Time >= datetime('now', '-15 hours') ORDER BY Time ASC",
+        "timeColumns": ["time"] }
     ]
   },
   "panels": [
-    {
-      "id": 1,
-      "title": "수율 + 이벤트 Annotation (알람 발생 맥락)",
+
+    { "id": 1, "title": "수율 + 이벤트 Annotation (알람 발생 맥락)",
       "description": "이벤트 발생 시점을 수율 그래프 위에 마킹. 어떤 이벤트 이후 수율이 떨어졌는지 확인.",
-      "type": "timeseries",
-      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 10 },
+      "type": "timeseries", "gridPos": { "x": 0, "y": 0, "w": 24, "h": 10 },
       "datasource": { "uid": "gvision_sqlite" },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent",
-          "min": 90, "max": 100,
-          "custom": { "lineWidth": 2, "fillOpacity": 15 }
-        }
-      },
-      "targets": [{
-        "datasource": { "uid": "gvision_sqlite" },
-        "refId": "A",
-        "rawQueryText": "SELECT strftime('%Y-%m-%dT%H:%M:00Z', datetime(StartTIme, '-9 hours')) AS time, ROUND(SUM(CASE WHEN Item = 'PASS' THEN 1.0 ELSE 0 END) / COUNT(*) * 100, 2) AS yield FROM inspection_results WHERE StartTIme >= datetime('now', '-15 hours') GROUP BY strftime('%Y-%m-%dT%H:%M:00', datetime(StartTIme, '-9 hours')) ORDER BY time ASC",
-        "timeColumns": ["time"]
-      }]
-    },
-    {
-      "id": 2,
-      "title": "이벤트 타임라인",
-      "description": "LogType: 1=System, 4=LOT, 5=Recipe",
-      "type": "table",
-      "gridPos": { "x": 0, "y": 10, "w": 14, "h": 12 },
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 90, "max": 100, "custom": { "lineWidth": 2, "fillOpacity": 15 } } },
+      "targets": [{ "datasource": { "uid": "gvision_sqlite" }, "refId": "A",
+          "rawQueryText": "SELECT strftime('%Y-%m-%dT%H:%M:00Z', datetime(StartTIme, '-9 hours')) AS time, ROUND(SUM(CASE WHEN Item = 'PASS' THEN 1.0 ELSE 0 END) / COUNT(*) * 100, 2) AS yield FROM inspection_results WHERE StartTIme >= datetime('now', '-15 hours') GROUP BY strftime('%Y-%m-%dT%H:%M:00', datetime(StartTIme, '-9 hours')) ORDER BY time ASC",
+          "timeColumns": ["time"] }] },
+
+    { "id": 2, "title": "이벤트 타임라인", "description": "LogType: 1=System, 4=LOT, 5=Recipe",
+      "type": "table", "gridPos": { "x": 0, "y": 10, "w": 14, "h": 12 },
       "datasource": { "uid": "gvision_sqlite" },
       "options": { "sortBy": [{ "displayName": "시각", "desc": true }] },
-      "targets": [{
-        "datasource": { "uid": "gvision_sqlite" },
-        "refId": "A",
-        "rawQueryText": "SELECT strftime('%Y-%m-%dT%H:%M:%SZ', datetime(substr(Time,1,19), '-9 hours')) AS 시각, CASE LogType WHEN 1 THEN '시스템' WHEN 5 THEN CASE WHEN Description LIKE '%Teaching%' THEN 'Teaching' ELSE 'Recipe' END WHEN 4 THEN CASE WHEN Description NOT LIKE '%INSPECTION RESULT%' THEN 'LOT' ELSE 'Inspection' END ELSE CAST(LogType AS TEXT) END AS 구분, CASE WHEN instr(Description, char(10)) > 0 THEN trim(substr(Description,1,instr(Description,char(10))-1)) ELSE trim(substr(Description,1,100)) END AS 내용 FROM histories WHERE Time >= datetime('now', '-15 hours') ORDER BY Time DESC LIMIT 100",
-        "timeColumns": ["시각"]
-      }]
-    },
-    {
-      "id": 3,
-      "title": "구분별 이벤트 빈도",
-      "type": "barchart",
-      "gridPos": { "x": 14, "y": 10, "w": 10, "h": 12 },
+      "targets": [{ "datasource": { "uid": "gvision_sqlite" }, "refId": "A",
+          "rawQueryText": "SELECT strftime('%Y-%m-%dT%H:%M:%SZ', datetime(substr(Time,1,19), '-9 hours')) AS 시각, CASE LogType WHEN 1 THEN '시스템' WHEN 5 THEN CASE WHEN Description LIKE '%Teaching%' THEN 'Teaching' ELSE 'Recipe' END WHEN 4 THEN CASE WHEN Description NOT LIKE '%INSPECTION RESULT%' THEN 'LOT' ELSE 'Inspection' END ELSE CAST(LogType AS TEXT) END AS 구분, CASE WHEN instr(Description, char(10)) > 0 THEN trim(substr(Description,1,instr(Description,char(10))-1)) ELSE trim(substr(Description,1,100)) END AS 내용 FROM histories WHERE Time >= datetime('now', '-15 hours') ORDER BY Time DESC LIMIT 100",
+          "timeColumns": ["시각"] }] },
+
+    { "id": 3, "title": "구분별 이벤트 빈도",
+      "type": "barchart", "gridPos": { "x": 14, "y": 10, "w": 10, "h": 12 },
       "datasource": { "uid": "gvision_sqlite" },
-      "targets": [{
-        "datasource": { "uid": "gvision_sqlite" },
-        "refId": "A",
-        "rawQueryText": "SELECT CASE LogType WHEN 1 THEN 'System' WHEN 2 THEN 'Inspection' WHEN 4 THEN 'LOT' WHEN 5 THEN 'Recipe' ELSE CAST(LogType AS TEXT) END AS 구분, COUNT(*) AS count FROM histories WHERE Time >= datetime('now', '-15 hours') GROUP BY LogType ORDER BY count DESC",
-        "timeColumns": []
-      }]
-    }
+      "targets": [{ "datasource": { "uid": "gvision_sqlite" }, "refId": "A",
+          "rawQueryText": "SELECT CASE LogType WHEN 1 THEN 'System' WHEN 2 THEN 'Inspection' WHEN 4 THEN 'LOT' WHEN 5 THEN 'Recipe' ELSE CAST(LogType AS TEXT) END AS 구분, COUNT(*) AS count FROM histories WHERE Time >= datetime('now', '-15 hours') GROUP BY LogType ORDER BY count DESC",
+          "timeColumns": [] }] },
+
+    { "id": 4, "type": "row", "title": "오류 분석", "gridPos": { "x": 0, "y": 22, "w": 24, "h": 1 }, "collapsed": false },
+
+    { "id": 5, "title": "현재 발생 알람",
+      "description": "Grafana 알람 규칙 중 현재 Firing / Pending 상태인 항목이 표시됩니다.",
+      "type": "alertlist", "gridPos": { "x": 0, "y": 23, "w": 12, "h": 6 },
+      "options": { "maxItems": 10, "sortOrder": 1, "dashboardAlerts": false, "alertName": "GVision",
+        "dashboardTitle": "", "showOptions": "current", "tags": [],
+        "stateFilter": { "firing": true, "pending": true, "noData": false, "normal": false, "error": true },
+        "groupBy": [], "groupMode": "default", "viewMode": "list", "folder": { "id": 0, "title": "GVision Alerts" } } },
+
+    { "id": 6, "title": "예외 발생 건수 (오늘)", "type": "stat", "gridPos": { "x": 12, "y": 23, "w": 4, "h": 3 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "value": null, "color": "green" }, { "value": 1, "color": "yellow" }, { "value": 5, "color": "red" }] } } },
+      "targets": [{ "datasource": { "uid": "gvision_sqlite" }, "refId": "A",
+          "rawQueryText": "SELECT COUNT(*) AS value FROM histories WHERE LogType=1 AND Description LIKE '%Exception:%' AND date(Time) = date('now', '+9 hours')",
+          "timeColumns": [] }] },
+
+    { "id": 7, "title": "카메라 오류 (오늘)", "type": "stat", "gridPos": { "x": 16, "y": 23, "w": 4, "h": 3 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "value": null, "color": "green" }, { "value": 1, "color": "red" }] } } },
+      "targets": [{ "datasource": { "uid": "gvision_sqlite" }, "refId": "A",
+          "rawQueryText": "SELECT COUNT(*) AS value FROM histories WHERE LogType=1 AND (Description LIKE '%CameraTimeOut%' OR Description LIKE '%NotInitializedCamera%' OR Description LIKE '%PrsImageDequeue%' OR Description LIKE '%CameraTrigger%') AND date(Time) = date('now', '+9 hours')",
+          "timeColumns": [] }] },
+
+    { "id": 8, "title": "통신 오류 (오늘)", "type": "stat", "gridPos": { "x": 20, "y": 23, "w": 4, "h": 3 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "value": null, "color": "green" }, { "value": 1, "color": "red" }] } } },
+      "targets": [{ "datasource": { "uid": "gvision_sqlite" }, "refId": "A",
+          "rawQueryText": "SELECT COUNT(*) AS value FROM histories WHERE LogType=1 AND (Description LIKE '%UdpBinding%' OR Description LIKE '%UdpSend%' OR Description LIKE '%UdpSocket%') AND date(Time) = date('now', '+9 hours')",
+          "timeColumns": [] }] },
+
+    { "id": 9, "title": "비전 오류 (오늘)", "type": "stat", "gridPos": { "x": 12, "y": 26, "w": 4, "h": 3 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "value": null, "color": "green" }, { "value": 1, "color": "orange" }, { "value": 5, "color": "red" }] } } },
+      "targets": [{ "datasource": { "uid": "gvision_sqlite" }, "refId": "A",
+          "rawQueryText": "SELECT COUNT(*) AS value FROM histories WHERE LogType=1 AND (Description LIKE '%VisionNotFound%' OR Description LIKE '%VisionIf%' OR Description LIKE '%HalconLicense%') AND date(Time) = date('now', '+9 hours')",
+          "timeColumns": [] }] },
+
+    { "id": 10, "title": "조명 오류 (오늘)", "type": "stat", "gridPos": { "x": 16, "y": 26, "w": 4, "h": 3 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "value": null, "color": "green" }, { "value": 1, "color": "red" }] } } },
+      "targets": [{ "datasource": { "uid": "gvision_sqlite" }, "refId": "A",
+          "rawQueryText": "SELECT COUNT(*) AS value FROM histories WHERE LogType=1 AND (Description LIKE '%NoIllumination%' OR Description LIKE '%UnknownLight%') AND date(Time) = date('now', '+9 hours')",
+          "timeColumns": [] }] },
+
+    { "id": 11, "title": "설정 오류 (오늘)", "type": "stat", "gridPos": { "x": 20, "y": 26, "w": 4, "h": 3 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "value": null, "color": "green" }, { "value": 1, "color": "orange" }] } } },
+      "targets": [{ "datasource": { "uid": "gvision_sqlite" }, "refId": "A",
+          "rawQueryText": "SELECT COUNT(*) AS value FROM histories WHERE LogType=1 AND (Description LIKE '%WrongSetting%' OR Description LIKE '%WrongGrid%' OR Description LIKE '%NotAllowedMode%' OR Description LIKE '%DuplicatedLot%') AND date(Time) = date('now', '+9 hours')",
+          "timeColumns": [] }] },
+
+    { "id": 12, "title": "오류 발생 로그",
+      "description": "LogType=1(시스템) + Exception 포함 항목만 표시. [ErrorCode] ExceptionType: Message 형식.",
+      "type": "table", "gridPos": { "x": 0, "y": 29, "w": 14, "h": 11 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "options": { "sortBy": [{ "displayName": "시각", "desc": true }] },
+      "fieldConfig": { "defaults": {},
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "분류" }, "properties": [
+              { "id": "custom.width", "value": 90 },
+              { "id": "mappings", "value": [
+                  { "type": "value", "options": { "카메라": { "text": "카메라", "color": "red" } } },
+                  { "type": "value", "options": { "통신":   { "text": "통신",   "color": "orange" } } },
+                  { "type": "value", "options": { "비전":   { "text": "비전",   "color": "yellow" } } },
+                  { "type": "value", "options": { "조명":   { "text": "조명",   "color": "purple" } } },
+                  { "type": "value", "options": { "설정":   { "text": "설정",   "color": "blue" } } },
+                  { "type": "value", "options": { "기타":   { "text": "기타",   "color": "gray" } } } ] },
+              { "id": "custom.displayMode", "value": "color-background" } ] },
+          { "matcher": { "id": "byName", "options": "시각" }, "properties": [{ "id": "custom.width", "value": 155 }] },
+          { "matcher": { "id": "byName", "options": "코드" }, "properties": [{ "id": "custom.width", "value": 160 }] }] },
+      "targets": [{ "datasource": { "uid": "gvision_sqlite" }, "refId": "A",
+          "rawQueryText": "SELECT strftime('%Y-%m-%d %H:%M:%S', datetime(substr(Time,1,19), '-9 hours')) AS 시각, CASE WHEN Description LIKE '%CameraTimeout%' OR Description LIKE '%NotInitializedCamera%' OR Description LIKE '%PrsImageDequeue%' OR Description LIKE '%CameraTrigger%' THEN '카메라' WHEN Description LIKE '%Udp%' THEN '통신' WHEN Description LIKE '%VisionNotFound%' OR Description LIKE '%VisionIf%' OR Description LIKE '%HalconLicense%' THEN '비전' WHEN Description LIKE '%NoIllumination%' OR Description LIKE '%UnknownLight%' THEN '조명' WHEN Description LIKE '%WrongSetting%' OR Description LIKE '%WrongGrid%' OR Description LIKE '%NotAllowedMode%' OR Description LIKE '%DuplicatedLot%' THEN '설정' ELSE '기타' END AS 분류, CASE WHEN instr(Description, ']') > 0 THEN trim(substr(Description, 2, instr(Description, ']') - 2)) ELSE '?' END AS 코드, CASE WHEN instr(Description, ': ') > 0 THEN trim(substr(Description, instr(Description, ': ') + 2)) ELSE Description END AS 메시지 FROM histories WHERE LogType=1 AND Description LIKE '%Exception:%' AND Time >= datetime('now', '-15 hours') ORDER BY Time DESC LIMIT 100",
+          "timeColumns": ["시각"] }] },
+
+    { "id": 13, "title": "오류 유형별 발생 횟수",
+      "description": "예외 종류별 누적 빈도. 가장 많은 유형부터 우선 점검.",
+      "type": "barchart", "gridPos": { "x": 14, "y": 29, "w": 10, "h": 11 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "options": { "orientation": "horizontal", "xField": "error_type", "legend": { "displayMode": "hidden" } },
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "red" } },
+        "overrides": [{ "matcher": { "id": "byName", "options": "count" }, "properties": [{ "id": "displayName", "value": "발생 횟수" }] }] },
+      "targets": [{ "datasource": { "uid": "gvision_sqlite" }, "refId": "A",
+          "rawQueryText": "SELECT CASE WHEN Description LIKE '%CameraTimeOut%' THEN 'CameraTimeout' WHEN Description LIKE '%NotInitializedCamera%' THEN 'Camera미초기화' WHEN Description LIKE '%PrsImageDequeue%' THEN 'PRS큐오류' WHEN Description LIKE '%CameraTrigger%' THEN 'CameraTrigger' WHEN Description LIKE '%UdpBinding%' THEN 'UDP바인딩오류' WHEN Description LIKE '%UdpSend%' THEN 'UDP송신오류' WHEN Description LIKE '%UdpSocket%' THEN 'UDP소켓오류' WHEN Description LIKE '%VisionNotFound%' THEN 'VisionNotFound' WHEN Description LIKE '%VisionIf%' THEN 'VisionIF오류' WHEN Description LIKE '%HalconLicense%' THEN 'HalconLicense' WHEN Description LIKE '%NoIllumination%' THEN 'NoIllumination' WHEN Description LIKE '%UnknownLight%' THEN '미확인조명' WHEN Description LIKE '%WrongSetting%' THEN 'WrongSetting' WHEN Description LIKE '%WrongGrid%' THEN 'WrongGridSize' WHEN Description LIKE '%NotAllowedMode%' THEN '모드요청오류' WHEN Description LIKE '%DuplicatedLot%' THEN 'LOT번호중복' ELSE '기타' END AS error_type, COUNT(*) AS count FROM histories WHERE LogType=1 AND Description LIKE '%Exception:%' AND Time >= datetime('now', '-15 hours') GROUP BY error_type ORDER BY count DESC",
+          "timeColumns": [] }] },
+
+    { "id": 14, "title": "수율 추이 — 오류 발생 시점 마킹",
+      "description": "빨간 수직선 = 예외 발생 시각. 오류 직후 수율 변화를 추적.",
+      "type": "timeseries", "gridPos": { "x": 0, "y": 40, "w": 24, "h": 9 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 85, "max": 100,
+          "custom": { "lineWidth": 2, "fillOpacity": 10, "thresholdsStyle": { "mode": "line" } },
+          "thresholds": { "mode": "absolute", "steps": [{ "value": null, "color": "red" }, { "value": 98, "color": "yellow" }, { "value": 99, "color": "green" }] } } },
+      "targets": [{ "datasource": { "uid": "gvision_sqlite" }, "refId": "A",
+          "rawQueryText": "SELECT strftime('%Y-%m-%dT%H:%M:00Z', datetime(StartTIme, '-9 hours')) AS time, ROUND(SUM(CASE WHEN Item = 'PASS' THEN 1.0 ELSE 0 END) / COUNT(*) * 100, 2) AS yield FROM inspection_results WHERE StartTIme >= datetime('now', '-15 hours') GROUP BY strftime('%Y-%m-%dT%H:%M:00', datetime(StartTIme, '-9 hours')) ORDER BY time ASC",
+          "timeColumns": ["time"] }] },
+
+    { "id": 15, "title": "처리시간 (Duration) — 카메라 응답 속도 지표",
+      "description": "처리시간 급등 = 카메라/조명 이상. 오류 annotation과 시점 대조.",
+      "type": "timeseries", "gridPos": { "x": 0, "y": 49, "w": 12, "h": 8 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "fieldConfig": { "defaults": { "unit": "ms", "custom": { "lineWidth": 2, "fillOpacity": 8 } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "max_ms" }, "properties": [
+              { "id": "custom.lineStyle", "value": { "dash": [4, 4], "fill": "dash" } },
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } },
+              { "id": "displayName", "value": "최대" } ] },
+          { "matcher": { "id": "byName", "options": "avg_ms" }, "properties": [{ "id": "displayName", "value": "평균" }] }] },
+      "targets": [{ "datasource": { "uid": "gvision_sqlite" }, "refId": "A",
+          "rawQueryText": "SELECT strftime('%Y-%m-%dT%H:%M:00Z', datetime(StartTIme, '-9 hours')) AS time, ROUND(AVG(Duration), 1) AS avg_ms, MAX(Duration) AS max_ms FROM inspection_results WHERE StartTIme >= datetime('now', '-15 hours') GROUP BY strftime('%Y-%m-%dT%H:%M:00', datetime(StartTIme, '-9 hours')) ORDER BY time ASC",
+          "timeColumns": ["time"] }] },
+
+    { "id": 16, "title": "XOffset / YOffset 드리프트 — 비전 정렬 지표",
+      "description": "한쪽으로 지속 이동 = Alignment 이상. VisionNotFoundException 발생 전 패턴 확인.",
+      "type": "timeseries", "gridPos": { "x": 12, "y": 49, "w": 12, "h": 8 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "fieldConfig": { "defaults": { "unit": "none", "custom": { "lineWidth": 1, "fillOpacity": 5 },
+          "thresholds": { "mode": "absolute", "steps": [{ "value": null, "color": "green" }, { "value": 0.05, "color": "yellow" }, { "value": 0.1, "color": "red" }] } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "x_offset" }, "properties": [{ "id": "displayName", "value": "XOffset" }] },
+          { "matcher": { "id": "byName", "options": "y_offset" }, "properties": [{ "id": "displayName", "value": "YOffset" }] }] },
+      "targets": [{ "datasource": { "uid": "gvision_sqlite" }, "refId": "A",
+          "rawQueryText": "SELECT strftime('%Y-%m-%dT%H:%M:00Z', datetime(StartTIme, '-9 hours')) AS time, ROUND(AVG(XOffset), 3) AS x_offset, ROUND(AVG(YOffset), 3) AS y_offset FROM inspection_results WHERE StartTIme >= datetime('now', '-15 hours') GROUP BY strftime('%Y-%m-%dT%H:%M:00', datetime(StartTIme, '-9 hours')) ORDER BY time ASC",
+          "timeColumns": ["time"] }] }
+
   ],
   "schemaVersion": 39
 }
