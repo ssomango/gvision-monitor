@@ -1,0 +1,182 @@
+{
+  "title": "05. 유지보수 KPI",
+  "uid": "gvision-maint",
+  "tags": ["gvision", "maintenance", "kpi"],
+  "refresh": "1m",
+  "time": { "from": "now-24h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "현재 수율 (최근 5분)",
+      "type": "gauge",
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 5 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 90, "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "red"    },
+              { "value": 98,   "color": "yellow" },
+              { "value": 99,   "color": "green"  }
+            ]
+          }
+        }
+      },
+      "targets": [{
+        "datasource": { "uid": "gvision_sqlite" },
+        "refId": "A",
+        "rawQueryText": "SELECT ROUND(SUM(CASE WHEN Item='PASS' THEN 1.0 ELSE 0 END)/COUNT(*)*100,2) AS value FROM inspection_results WHERE StartTIme >= date('now', '+9 hours')",
+        "timeColumns": []
+      }]
+    },
+    {
+      "id": 2,
+      "title": "총 검사 건수 (오늘)",
+      "type": "stat",
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 5 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": {
+        "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "value": null, "color": "blue" }] } }
+      },
+      "targets": [{
+        "datasource": { "uid": "gvision_sqlite" },
+        "refId": "A",
+        "rawQueryText": "SELECT COUNT(*) AS value FROM inspection_results WHERE date(StartTIme) = date('now', '+9 hours')",
+        "timeColumns": []
+      }]
+    },
+    {
+      "id": 3,
+      "title": "불량 건수 (오늘)",
+      "type": "stat",
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 5 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green"  },
+              { "value": 10,   "color": "yellow" },
+              { "value": 50,   "color": "red"    }
+            ]
+          }
+        }
+      },
+      "targets": [{
+        "datasource": { "uid": "gvision_sqlite" },
+        "refId": "A",
+        "rawQueryText": "SELECT COUNT(*) AS value FROM inspection_results WHERE Item != 'PASS' AND date(StartTIme) = date('now', '+9 hours')",
+        "timeColumns": []
+      }]
+    },
+    {
+      "id": 4,
+      "title": "이벤트 발생 수 (오늘)",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 0, "w": 4, "h": 5 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": {
+        "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "value": null, "color": "blue" }] } }
+      },
+      "targets": [{
+        "datasource": { "uid": "gvision_sqlite" },
+        "refId": "A",
+        "rawQueryText": "SELECT COUNT(*) AS value FROM histories WHERE date(Time) = date('now', '+9 hours')",
+        "timeColumns": []
+      }]
+    },
+    {
+      "id": 5,
+      "title": "평균 처리시간 (오늘)",
+      "type": "stat",
+      "gridPos": { "x": 16, "y": 0, "w": 4, "h": 5 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "value": null, "color": "green"  },
+              { "value": 150,  "color": "yellow" },
+              { "value": 200,  "color": "red"    }
+            ]
+          }
+        }
+      },
+      "targets": [{
+        "datasource": { "uid": "gvision_sqlite" },
+        "refId": "A",
+        "rawQueryText": "SELECT ROUND(AVG(Duration),1) AS value FROM inspection_results WHERE date(StartTIme) = date('now', '+9 hours')",
+        "timeColumns": []
+      }]
+    },
+    {
+      "id": 6,
+      "title": "불량 발생 추이 (시간당)",
+      "description": "시간대별 불량 건수. 급증 구간이 유지보수 개입 시점.",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 5, "w": 16, "h": 9 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "fixed", "fixedColor": "red" },
+          "custom": { "lineWidth": 2, "fillOpacity": 20 }
+        }
+      },
+      "targets": [{
+        "datasource": { "uid": "gvision_sqlite" },
+        "refId": "A",
+        "rawQueryText": "SELECT strftime('%Y-%m-%dT%H:00:00Z', datetime(StartTIme, '-9 hours')) AS time, COUNT(*) AS fail_count FROM inspection_results WHERE Item != 'PASS' AND StartTIme >= datetime('now', '-15 hours') GROUP BY strftime('%Y-%m-%dT%H', datetime(StartTIme, '-9 hours')) ORDER BY time ASC",
+        "timeColumns": ["time"]
+      }]
+    },
+    {
+      "id": 7,
+      "title": "불량 유형 파레토 (오늘)",
+      "description": "누적 불량 원인 Top 5. 가장 빈번한 원인부터 집중 점검.",
+      "type": "barchart",
+      "gridPos": { "x": 16, "y": 5, "w": 8, "h": 9 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "options": {
+        "xField": "error_type",
+        "orientation": "horizontal",
+        "legend": { "displayMode": "hidden" }
+      },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "fixed", "fixedColor": "semi-dark-red" } }
+      },
+      "targets": [{
+        "datasource": { "uid": "gvision_sqlite" },
+        "refId": "A",
+        "rawQueryText": "SELECT Item AS error_type, COUNT(*) AS count FROM inspection_results WHERE Item != 'PASS' AND date(StartTIme) = date('now', '+9 hours') GROUP BY Item ORDER BY count DESC LIMIT 5",
+        "timeColumns": []
+      }]
+    },
+    {
+      "id": 8,
+      "title": "장비 이벤트 타임라인 (유지보수 이력)",
+      "description": "LogType: 1=System(장비이상), 4=LOT, 5=Recipe변경",
+      "type": "table",
+      "gridPos": { "x": 0, "y": 14, "w": 24, "h": 10 },
+      "datasource": { "uid": "gvision_sqlite" },
+      "options": { "sortBy": [{ "displayName": "시각", "desc": true }] },
+      "targets": [{
+        "datasource": { "uid": "gvision_sqlite" },
+        "refId": "A",
+        "rawQueryText": "SELECT strftime('%Y-%m-%dT%H:%M:%SZ', datetime(substr(Time,1,19), '-9 hours')) AS 시각, CASE LogType WHEN 1 THEN 'System' WHEN 4 THEN 'LOT' WHEN 5 THEN 'Recipe' ELSE CAST(LogType AS TEXT) END AS 구분, substr(Description,1,100) AS 내용 FROM histories WHERE Time >= datetime('now', '-15 hours') AND LogType IN (1,4,5) ORDER BY Time DESC LIMIT 100",
+        "timeColumns": ["시각"]
+      }]
+    }
+  ],
+  "schemaVersion": 39
+}
