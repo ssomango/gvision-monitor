@@ -15,82 +15,85 @@
         "colorMode": "background",
         "textMode": "value",
         "graphMode": "none",
-        "reduceOptions": { "calcs": ["lastNotNull"] }
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
       },
       "fieldConfig": {
         "defaults": {
           "mappings": [
-            { "type": "value", "options": { "RUN":     { "text": "RUN",     "color": "green"  } } },
-            { "type": "value", "options": { "SetUp":   { "text": "SETUP",   "color": "yellow" } } },
-            { "type": "value", "options": { "OFFLINE": { "text": "OFFLINE", "color": "gray"   } } }
+            { "type": "value", "options": { "0": { "text": "OFFLINE", "color": "gray"   } } },
+            { "type": "value", "options": { "1": { "text": "RUN",     "color": "green"  } } },
+            { "type": "value", "options": { "2": { "text": "SETUP",   "color": "yellow" } } }
           ],
           "thresholds": { "mode": "absolute", "steps": [{ "value": null, "color": "gray" }] }
-        },
-        "overrides": [{ "matcher": { "id": "byName", "options": "모드" }, "properties": [] }]
+        }
       },
       "targets": [{
         "datasource": { "uid": "gvision_api" },
         "refId": "A",
         "queryType": "infinity",
-        "type": "json",
+        "type": "csv",
         "source": "url",
         "format": "table",
-        "url": "/api/status",
-        "parser": "backend",
-        "root_selector": "",
-        "columns": [{ "selector": "runningMode", "text": "모드", "type": "string" }]
+        "url": "http://localhost:4000/api/status/mode",
+        "url_options": { "method": "GET" },
+        "columns": [{ "selector": "value", "text": "모드", "type": "number" }],
+        "filters": []
       }]
     },
     {
       "id": 2,
       "title": "현재 Recipe",
-      "type": "stat",
+      "type": "table",
       "gridPos": { "x": 4, "y": 0, "w": 6, "h": 4 },
-      "datasource": { "uid": "gvision_api" },
+      "datasource": { "uid": "gvision_status_db" },
       "options": {
-        "colorMode": "none",
-        "textMode": "value",
-        "graphMode": "none",
-        "reduceOptions": { "calcs": ["lastNotNull"] }
+        "cellHeight": "lg",
+        "footer": { "show": false },
+        "showHeader": false
       },
-      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "value": null, "color": "blue" }] } } },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "mode": "absolute", "steps": [{ "value": null, "color": "blue" }] },
+          "custom": {
+            "align": "center",
+            "cellOptions": { "type": "colored-background", "fillOpacity": 80 },
+            "filterable": false
+          }
+        }
+      },
       "targets": [{
-        "datasource": { "uid": "gvision_api" },
+        "datasource": { "uid": "gvision_status_db" },
         "refId": "A",
-        "queryType": "infinity",
-        "type": "json",
-        "source": "url",
-        "format": "table",
-        "url": "/api/status",
-        "parser": "backend",
-        "root_selector": "",
-        "columns": [{ "selector": "recipeName", "text": "Recipe", "type": "string" }]
+        "rawQueryText": "SELECT value AS Recipe FROM current_status WHERE key = 'recipeName' LIMIT 1",
+        "timeColumns": []
       }]
     },
     {
       "id": 3,
       "title": "현재 Lot 번호",
-      "type": "stat",
+      "type": "table",
       "gridPos": { "x": 10, "y": 0, "w": 7, "h": 4 },
-      "datasource": { "uid": "gvision_api" },
+      "datasource": { "uid": "gvision_status_db" },
       "options": {
-        "colorMode": "none",
-        "textMode": "value",
-        "graphMode": "none",
-        "reduceOptions": { "calcs": ["lastNotNull"] }
+        "cellHeight": "lg",
+        "footer": { "show": false },
+        "showHeader": false
       },
-      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "value": null, "color": "blue" }] } } },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "mode": "absolute", "steps": [{ "value": null, "color": "blue" }] },
+          "custom": {
+            "align": "center",
+            "cellOptions": { "type": "colored-background", "fillOpacity": 80 },
+            "filterable": false
+          }
+        }
+      },
       "targets": [{
-        "datasource": { "uid": "gvision_api" },
+        "datasource": { "uid": "gvision_status_db" },
         "refId": "A",
-        "queryType": "infinity",
-        "type": "json",
-        "source": "url",
-        "format": "table",
-        "url": "/api/status",
-        "parser": "backend",
-        "root_selector": "",
-        "columns": [{ "selector": "lotNo", "text": "Lot", "type": "string" }]
+        "rawQueryText": "SELECT value AS LotNo FROM current_status WHERE key = 'lotNo' LIMIT 1",
+        "timeColumns": []
       }]
     },
     {
@@ -103,14 +106,14 @@
         "colorMode": "value",
         "textMode": "value",
         "graphMode": "none",
-        "reduceOptions": { "calcs": ["lastNotNull"] }
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
       },
       "fieldConfig": {
         "defaults": {
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "value": null, "color": "gray" },
+              { "value": null, "color": "gray"  },
               { "value": 1,    "color": "green" }
             ]
           }
@@ -123,10 +126,11 @@
         "type": "json",
         "source": "url",
         "format": "table",
-        "url": "/api/status",
-        "parser": "backend",
-        "root_selector": "",
-        "columns": [{ "selector": "connectedClients", "text": "연결수", "type": "number" }]
+        "url": "http://localhost:4000/api/status",
+        "url_options": { "method": "GET" },
+        "root_selector": "rows",
+        "columns": [{ "selector": "connectedClients", "text": "연결수", "type": "number" }],
+        "filters": []
       }]
     },
     {
@@ -134,24 +138,38 @@
       "title": "최근 이벤트 로그",
       "type": "table",
       "gridPos": { "x": 0, "y": 4, "w": 24, "h": 12 },
-      "datasource": { "uid": "gvision_api" },
+      "datasource": { "uid": "gvision_sqlite" },
       "options": { "sortBy": [{ "displayName": "시각", "desc": true }] },
-      "targets": [{
-        "datasource": { "uid": "gvision_api" },
-        "refId": "A",
-        "queryType": "infinity",
-        "type": "json",
-        "source": "url",
-        "format": "table",
-        "url": "/api/events?limit=30",
-        "parser": "backend",
-        "root_selector": "events",
-        "columns": [
-          { "selector": "Time",        "text": "시각",     "type": "string" },
-          { "selector": "LogType",     "text": "구분",     "type": "number" },
-          { "selector": "Camera",      "text": "카메라",   "type": "string" },
-          { "selector": "Description", "text": "내용",     "type": "string" }
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "구분" },
+            "properties": [
+              { "id": "custom.width", "value": 120 },
+              {
+                "id": "mappings",
+                "value": [
+                  { "type": "value", "options": { "시스템":        { "text": "시스템",        "color": "red"    } } },
+                  { "type": "value", "options": { "LOT":           { "text": "LOT",           "color": "blue"   } } },
+                  { "type": "value", "options": { "Recipe":        { "text": "Recipe",        "color": "purple" } } },
+                  { "type": "value", "options": { "Teaching":      { "text": "Teaching",      "color": "orange" } } }
+                ]
+              },
+              { "id": "custom.displayMode", "value": "color-background" }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "시각" },
+            "properties": [ { "id": "custom.width", "value": 160 } ]
+          }
         ]
+      },
+      "targets": [{
+        "datasource": { "uid": "gvision_sqlite" },
+        "refId": "A",
+        "rawQueryText": "SELECT strftime('%Y-%m-%d %H:%M:%S', datetime(substr(Time,1,19), '-9 hours')) AS 시각, CASE LogType WHEN 1 THEN '시스템' WHEN 5 THEN CASE WHEN Description LIKE '%Teaching%' THEN 'Teaching' ELSE 'Recipe' END WHEN 4 THEN 'LOT' ELSE CAST(LogType AS TEXT) END AS 구분, CASE WHEN instr(Description, char(10)) > 0 THEN trim(substr(Description,1,instr(Description,char(10))-1)) ELSE trim(substr(Description,1,100)) END AS 내용 FROM histories WHERE (LogType=1 OR LogType=5 OR (LogType=4 AND Description NOT LIKE '%INSPECTION RESULT%')) ORDER BY Time DESC LIMIT 50",
+        "timeColumns": []
       }]
     }
   ],
