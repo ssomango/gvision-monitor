@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../inspection/inspection_provider.dart';
 import '../../core/ws/ws_client.dart';
 import 'home_provider.dart';
 import 'widgets/status_banner.dart';
 import 'widgets/event_log_tile.dart';
+import 'widgets/yield_gauge_card.dart';
 import '../events/event_context_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -13,6 +15,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<HomeProvider>();
     final ws = context.watch<WsClient>();
+    final p = context.watch<InspectionProvider>();
 
     return Scaffold(
       appBar: AppBar(
@@ -38,6 +41,15 @@ class HomeScreen extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.all(12),
                   child: StatusBanner(status: provider.status),
+                ),
+
+                // 수율 게이지 카드
+                YieldGaugeCard(
+                  yieldRate: p.yieldRate,
+                  total: p.total,
+                  good: p.good,
+                  reject: p.reject,
+                  noDevice: p.noDevice,
                 ),
 
                 // 이벤트 로그 헤더
