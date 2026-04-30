@@ -12,8 +12,24 @@ class InspectionProvider extends ChangeNotifier {
   List<Map<String, dynamic>> yieldSeries = []; // [{minute, total, pass, yield}]
   bool loading = true;
 
+  List<dynamic> get series => List.unmodifiable(_series);
+
   RangeType _rangeType = RangeType.today;
   RangeType get rangeType => _rangeType;
+
+  double dropThreshold = 5.0;
+
+  void setDropThreshold(double value) {
+    dropThreshold = value;
+    notifyListeners();
+  }
+
+  double abnormalYieldThreshold = 90.0;
+
+  void setAbnormalYieldThreshold(double value) {
+    abnormalYieldThreshold = value;
+    notifyListeners();
+  }
 
   // 오늘 집계
   int total = 0, good = 0, noDevice = 0, reject = 0, xout = 0;
@@ -80,6 +96,8 @@ class InspectionProvider extends ChangeNotifier {
     loading = false;
     notifyListeners();
   }
+
+
 
   void _aggregate() {
     total = _series.length;
