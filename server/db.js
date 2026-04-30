@@ -13,25 +13,63 @@
 const Database = require('better-sqlite3');
 const config = require('./config');
 const fs = require('fs');
+const path = require('path');
 
 let db = null;
+let dbPath = null;
+
+/**
+ * GvisionWpf가 실제로 쓰고 있는 DB 파일을 찾아 반환합니다.
+ * 같은 디렉터리에서 가장 최근에 수정된 .db 파일을 자동으로 선택합니다.
+ * GvisionWpf는 월별로 DB 파일을 교체할 수 있으므로 항상 최신 파일을 사용합니다.
+ */
+function resolveDbPath() {
+  const dir = path.dirname(config.DB_PATH);
+  if (!fs.existsSync(dir)) return null;
+
+  const candidates = fs.readdirSync(dir)
+    .filter(f => f.endsWith('.db') && !f.endsWith('-shm') && !f.endsWith('-wal'))
+    .map(f => ({ file: path.join(dir, f), mtime: fs.statSync(path.join(dir, f)).mtimeMs }))
+    .sort((a, b) => b.mtime - a.mtime);
+
+  return candidates.length > 0 ? candidates[0].file : null;
+}
+
+let lastPathCheckTime = 0;
+const PATH_CHECK_INTERVAL_MS = 60_000; // 1분마다 활성 파일 재확인
 
 /**
  * DB 연결을 가져옵니다.
- * DB 파일이 없으면 null을 반환합니다 (GvisionWpf가 아직 실행 안 된 경우).
+ * GvisionWpf가 DB 파일을 교체했으면 자동으로 재연결합니다.
  */
 function getDb() {
-  if (db) return db;
+  const now = Date.now();
+  let currentPath = dbPath;
 
-  if (!fs.existsSync(config.DB_PATH)) {
+  // 처음 연결이거나 1분마다 활성 파일 재확인
+  if (!currentPath || now - lastPathCheckTime > PATH_CHECK_INTERVAL_MS) {
+    currentPath = resolveDbPath();
+    lastPathCheckTime = now;
+  }
+
+  if (!currentPath) {
     console.warn(`[DB] 파일 없음: ${config.DB_PATH}`);
     console.warn('[DB] GvisionWpf가 실행된 적 있는지 확인하세요.');
     return null;
   }
 
-  // readonly: true → 읽기 전용 (GvisionWpf 쓰기와 충돌 방지)
-  db = new Database(config.DB_PATH, { readonly: true });
-  console.log(`[DB] 연결됨: ${config.DB_PATH}`);
+  // DB 파일이 교체됐으면 기존 연결 닫고 재연결
+  if (db && dbPath !== currentPath) {
+    console.log(`[DB] DB 파일 변경 감지: ${dbPath} → ${currentPath}`);
+    try { db.close(); } catch (_) {}
+    db = null;
+  }
+
+  if (!db) {
+    db = new Database(currentPath, { readonly: true });
+    dbPath = currentPath;
+    console.log(`[DB] 연결됨: ${currentPath}`);
+  }
   return db;
 }
 

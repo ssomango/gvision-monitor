@@ -1,38 +1,57 @@
 /**
  * routes/status.js
  *
- * GET /api/status
- *   → GvisionWpf /api/status를 그대로 중계 + 서버 연결 클라이언트 수 추가
+ * GET /api/status          → JSON (full)
+ * GET /api/status/mode     → CSV  (runningMode as number: Run=1 SetUp=2 OFFLINE=0)
+ * GET /api/status/recipe   → CSV  (recipeName string)
+ * GET /api/status/lot      → CSV  (lotNo string)
+ *
+ * Grafana Infinity datasource + stat panel 은 string-type JSON 컬럼을 NoData로
+ * 반환하는 버그가 있어서, CSV 형식으로 우회한다.
  */
 
 const express = require('express');
 const router = express.Router();
-const axios = require('axios');
-const config = require('../config');
 const wsManager = require('../websocket');
 const { getLastStatus } = require('../poller');
 
-// GvisionWpf 오프라인일 때 Grafana 01번 대시보드에 보여줄 mock 데이터
-const MOCK_STATUS = {
-  online: false,
-  runningMode: 'OFFLINE',
-  recipeName: '(GvisionWpf 미실행)',
-  lotNo: '-',
-  connectedClients: 0,
-};
+const MODE_CODE = { Run: 1, SetUp: 2, OFFLINE: 0 };
 
-router.get('/', async (req, res) => {
-  try {
-    const status = getLastStatus();
-    const data = status
-      ? { online: true, ...status, connectedClients: wsManager.getClientCount() }
-      : { ...MOCK_STATUS, connectedClients: wsManager.getClientCount() };
-
-    // Grafana Infinity 플러그인은 배열 형태를 선호
-    res.json([data]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+function getCurrentValues() {
+  const status = getLastStatus();
+  if (status) {
+    return {
+      modeCode:   MODE_CODE[status.runningMode] ?? 0,
+      recipeName: status.recipeName ?? '',
+      lotNo:      status.lotNo      ?? '',
+      connectedClients: wsManager.getClientCount(),
+    };
   }
+  return { modeCode: 0, recipeName: '(GvisionWpf 미실행)', lotNo: '-', connectedClients: 0 };
+}
+
+// ── full JSON (connectedClients panel 용) ──────────────────────────────
+router.get('/', (req, res) => {
+  const v = getCurrentValues();
+  res.json({ rows: [{ connectedClients: v.connectedClients }] });
+});
+
+// ── 장비 모드 (숫자로 인코딩 → Infinity stat panel이 number는 OK) ───────
+router.get('/mode', (req, res) => {
+  const { modeCode } = getCurrentValues();
+  res.type('text/csv').send(`value\n${modeCode}\n`);
+});
+
+// ── 현재 Recipe (CSV string) ─────────────────────────────────────────
+router.get('/recipe', (req, res) => {
+  const { recipeName } = getCurrentValues();
+  res.type('text/csv').send(`value\n${recipeName}\n`);
+});
+
+// ── 현재 Lot 번호 (CSV string) ───────────────────────────────────────
+router.get('/lot', (req, res) => {
+  const { lotNo } = getCurrentValues();
+  res.type('text/csv').send(`value\n${lotNo}\n`);
 });
 
 module.exports = router;

@@ -14,6 +14,7 @@ const axios = require('axios');
 const config = require('./config');
 const db = require('./db');
 const wsManager = require('./websocket');
+const statusDb = require('./statusDb');
 
 // 마지막으로 감지한 상태 (연결 시 즉시 전송에 사용)
 let lastStatus = null;
@@ -64,6 +65,7 @@ async function pollStatus() {
     if (lastStatus !== null) {
       lastStatus = null;
       wsManager.broadcast({ type: 'GVISION_OFFLINE', data: {} });
+      statusDb.updateStatus({ runningMode: 'OFFLINE', recipeName: '(오프라인)', lotNo: '-' });
     }
     return;
   }
@@ -72,6 +74,13 @@ async function pollStatus() {
     console.log(`[Poller] 상태 변경 감지: mode=${status.runningMode}, recipe=${status.recipeName}, lot=${status.lotNo}`);
     lastStatus = status;
     wsManager.broadcast({ type: 'STATUS', data: status });
+
+    // Grafana SQLite 패널이 읽을 수 있도록 현재 상태를 별도 DB에 기록
+    statusDb.updateStatus({
+      runningMode: status.runningMode,
+      recipeName:  status.recipeName,
+      lotNo:       status.lotNo,
+    });
   }
 }
 
