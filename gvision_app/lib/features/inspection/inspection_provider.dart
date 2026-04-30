@@ -3,12 +3,17 @@ import 'package:flutter/foundation.dart';
 import '../../core/api/inspections_api.dart';
 import '../../core/ws/ws_client.dart';
 
+enum RangeType { hour1, hour6, today }
+
 class InspectionProvider extends ChangeNotifier {
   final WsClient _ws;
 
   List<dynamic> _series = [];
   List<Map<String, dynamic>> yieldSeries = []; // [{minute, total, pass, yield}]
   bool loading = true;
+
+  RangeType _rangeType = RangeType.today;
+  RangeType get rangeType => _rangeType;
 
   // 오늘 집계
   int total = 0, good = 0, noDevice = 0, reject = 0, xout = 0;
@@ -42,16 +47,36 @@ class InspectionProvider extends ChangeNotifier {
 
   Future<void> _fetch() async {
     try {
+      final now = DateTime.now();
+
+      DateTime from;
+
+      switch (_rangeType) {
+        case RangeType.hour1:
+          from = now.subtract(const Duration(hours: 1));
+          break;
+        case RangeType.hour6:
+          from = now.subtract(const Duration(hours: 6));
+          break;
+        case RangeType.today:
+        default:
+          from = DateTime(now.year, now.month, now.day);
+          break;
+      }
+
       final results = await Future.wait([
-        InspectionsApi.fetchSeries(),
-        InspectionsApi.fetchYieldSeries(),
+        InspectionsApi.fetchSeries(from: from, to: now),
+        InspectionsApi.fetchYieldSeries(from: from, to: now),
       ]);
-      _series = results[0];
+
+      _series = (results[0] as List).cast<dynamic>();
       yieldSeries = (results[1] as List).cast<Map<String, dynamic>>();
+
       _aggregate();
     } catch (e) {
       debugPrint('[InspectionProvider] fetch 에러: $e');
     }
+
     loading = false;
     notifyListeners();
   }
@@ -92,6 +117,13 @@ class InspectionProvider extends ChangeNotifier {
   double get yieldRate {
     final denom = total - noDevice - xout;
     return denom > 0 ? good / denom * 100 : 0.0;
+  }
+
+  void setRange(RangeType type) {
+    _rangeType = type;
+    loading = true;
+    notifyListeners();
+    _fetch();
   }
 
   Future<void> refresh() => _fetch();

@@ -24,6 +24,7 @@ class InspectionScreen extends StatelessWidget {
               onRefresh: p.refresh,
               child: ListView(
                 children: [
+                  _rangeSelector(p),
                   _sectionHeader(context, '오늘 검사 결과'),
                   _summaryGrid(p),
                   _sectionHeader(context, '수율 트렌드'),
@@ -248,28 +249,111 @@ class InspectionScreen extends StatelessWidget {
       return FlSpot(i.toDouble(), y);
     }).toList();
 
-    return SizedBox(
-      height: 220,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 8, 16, 8),
-        child: LineChart(
-          LineChartData(
-            minY: 90,
-            maxY: 100,
-            gridData: const FlGridData(show: true),
-            borderData: FlBorderData(show: false),
-            titlesData: const FlTitlesData(
-              topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            ),
-            lineBarsData: [
-              LineChartBarData(
-                spots: spots,
-                isCurved: true,
-                dotData: const FlDotData(show: false),
-                barWidth: 2,
+    String timeLabel(int index) {
+      if (index < 0 || index >= data.length) return '';
+
+      final raw = data[index]['minute']?.toString() ?? '';
+      final dt = DateTime.tryParse(raw);
+
+      if (dt == null) return '';
+
+      final h = dt.hour.toString().padLeft(2, '0');
+      final m = dt.minute.toString().padLeft(2, '0');
+      return '$h:$m';
+    }
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: SizedBox(
+        height: 240,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 16, 20, 12),
+          child: LineChart(
+            LineChartData(
+              minY: 0,
+              maxY: 100,
+              gridData: const FlGridData(show: true),
+              borderData: FlBorderData(show: false),
+              titlesData: FlTitlesData(
+                topTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                rightTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                leftTitles: const AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 36,
+                  ),
+                ),
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 28,
+                    interval: (data.length / 4).ceilToDouble(),
+                    getTitlesWidget: (value, meta) {
+                      final i = value.toInt();
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text(
+                          timeLabel(i),
+                          style: const TextStyle(
+                            fontSize: 9,
+                            color: Colors.white54,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ),
-            ],
+              lineBarsData: [
+                LineChartBarData(
+                  spots: spots,
+                  isCurved: true,
+                  dotData: const FlDotData(show: true),
+                  barWidth: 2,
+                  color: const Color(0xFF42A5F5),
+                  belowBarData: BarAreaData(
+                    show: true,
+                    color: const Color(0xFF42A5F5).withOpacity(0.12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  Widget _rangeSelector(InspectionProvider p) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          _rangeBtn('1H', RangeType.hour1, p),
+          _rangeBtn('6H', RangeType.hour6, p),
+          _rangeBtn('TODAY', RangeType.today, p),
+        ],
+      ),
+    );
+  }
+
+  Widget _rangeBtn(String label, RangeType type, InspectionProvider p) {
+    final selected = p.rangeType == type;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: TextButton(
+        onPressed: () => p.setRange(type),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+            color: selected ? Colors.white : Colors.white38,
           ),
         ),
       ),
