@@ -7,7 +7,7 @@ class InspectionProvider extends ChangeNotifier {
   final WsClient _ws;
 
   List<dynamic> _series = [];
-  List<dynamic> _errors = [];
+  List<Map<String, dynamic>> yieldSeries = []; // [{minute, total, pass, yield}]
   bool loading = true;
 
   // 오늘 집계
@@ -44,12 +44,14 @@ class InspectionProvider extends ChangeNotifier {
     try {
       final results = await Future.wait([
         InspectionsApi.fetchSeries(),
-        InspectionsApi.fetchErrors(),
+        InspectionsApi.fetchYieldSeries(),
       ]);
       _series = results[0];
-      _errors = results[1];
+      yieldSeries = (results[1] as List).cast<Map<String, dynamic>>();
       _aggregate();
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[InspectionProvider] fetch 에러: $e');
+    }
     loading = false;
     notifyListeners();
   }
@@ -86,8 +88,6 @@ class InspectionProvider extends ChangeNotifier {
       }
     }
   }
-
-  List<dynamic> get errors => _errors;
 
   double get yieldRate {
     final denom = total - noDevice - xout;

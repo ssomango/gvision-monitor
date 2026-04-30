@@ -27,11 +27,21 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
-// 기본 시간 범위: 현재로부터 1시간 전 ~ 현재
+// DB 저장 형식(KST, 'YYYY-MM-DD HH:MM:SS')에 맞는 문자열 반환
+function kstStr(d) {
+  const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000);
+  return kst.toISOString().replace('T', ' ').substring(0, 19);
+}
+
+// 기본 시간 범위: 오늘 00:00 KST ~ 현재 (당일 전체)
 function defaultRange() {
-  const to   = new Date().toISOString();
-  const from = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  return { from, to };
+  const now  = new Date();
+  const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  const todayKst = new Date(kstNow.toISOString().substring(0, 10) + 'T00:00:00Z');
+  return {
+    from: kstStr(new Date(todayKst.getTime() - 9 * 60 * 60 * 1000)), // KST 00:00
+    to:   kstStr(now),
+  };
 }
 
 // GET /api/inspections/series

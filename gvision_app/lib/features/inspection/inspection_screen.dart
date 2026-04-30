@@ -26,12 +26,14 @@ class InspectionScreen extends StatelessWidget {
                 children: [
                   _sectionHeader(context, '오늘 검사 결과'),
                   _summaryGrid(p),
+                  _sectionHeader(context, '수율 트렌드'),
+                  _yieldTrendChart(p),
                   _sectionHeader(context, '검사 타입별 현황'),
                   _typeTable(p),
-                  if (p.errors.isNotEmpty) ...[
-                    _sectionHeader(context, '불량 유형 Top10'),
-                    _paretoChart(p.errors),
-                  ],
+                  // if (p.errors.isNotEmpty) ...[
+                  //   _sectionHeader(context, '불량 유형 Top10'),
+                  //   _paretoChart(p.errors),
+                  // ],
                   const SizedBox(height: 24),
                 ],
               ),
@@ -224,6 +226,50 @@ class InspectionScreen extends StatelessWidget {
             ),
             gridData: const FlGridData(show: true),
             borderData: FlBorderData(show: false),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _yieldTrendChart(InspectionProvider p) {
+    final data = p.yieldSeries;
+
+    if (data.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(16),
+        child: Text('데이터 없음'),
+      );
+    }
+
+    final spots = data.asMap().entries.map((e) {
+      final i = e.key;
+      final y = (e.value['yield'] as num).toDouble();
+      return FlSpot(i.toDouble(), y);
+    }).toList();
+
+    return SizedBox(
+      height: 220,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 8, 16, 8),
+        child: LineChart(
+          LineChartData(
+            minY: 90,
+            maxY: 100,
+            gridData: const FlGridData(show: true),
+            borderData: FlBorderData(show: false),
+            titlesData: const FlTitlesData(
+              topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            ),
+            lineBarsData: [
+              LineChartBarData(
+                spots: spots,
+                isCurved: true,
+                dotData: const FlDotData(show: false),
+                barWidth: 2,
+              ),
+            ],
           ),
         ),
       ),
