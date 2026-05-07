@@ -22,6 +22,10 @@ let lastStatus = null;
 // 마지막으로 읽은 history Id (이후 새로 추가된 것만 감지)
 let lastHistoryId = 0;
 
+// 마지막으로 감지한 lot 상태 (Id → { Id, LotNumber, EndTime })
+let lastLotSnapshot = {}; // { [id]: { Id, LotNumber, EndTime } }
+let lotSnapshotInitialized = false;
+
 // ALERT로 분류할 LogType 값
 // GvisionWpf ELog enum: SystemLogs=1, InspectionLogs=2, DatabaseLogs=3, LOTLogs=4, RecipeLogs=5
 const ALERT_LOG_TYPES = [1, 2]; // SystemLogs(에러), InspectionLogs(검사실패)
@@ -137,19 +141,85 @@ function pollEvents() {
 }
 
 /**
+ * lot 테이블 폴링 — 새 LOT 시작 / LOT 종료 감지 후 WebSocket push
+ */
+function pollLots() {
+  try {
+    const Database = require('better-sqlite3');
+    const fs = require('fs');
+    if (!fs.existsSync(config.DB_PATH)) return;
+
+    const tempDb = new Database(config.DB_PATH, { readonly: true });
+    const rows = tempDb.prepare(`SELECT Id, LotNumber, Package, StartTime, EndTime FROM lot ORDER BY Id DESC LIMIT 20`).all();
+    tempDb.close();
+
+    // 첫 실행 시 현재 상태를 스냅샷으로만 저장 (과거 lot은 이벤트로 push 안 함)
+    if (!lotSnapshotInitialized) {
+      for (const row of rows) {
+        lastLotSnapshot[row.Id] = { Id: row.Id, LotNumber: row.LotNumber, EndTime: row.EndTime };
+      }
+      lotSnapshotInitialized = true;
+      return;
+    }
+
+    for (const row of rows) {
+      const prev = lastLotSnapshot[row.Id];
+
+      if (!prev) {
+        // 새 LOT 시작
+        console.log(`[Poller] LOT 시작 감지: ${row.LotNumber}`);
+        const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        wsManager.broadcast({
+          type: 'NEW_EVENT',
+          data: {
+            Id: `lot-start-${row.Id}`,
+            Time: row.StartTime || now,
+            LogType: 4,
+            Description: `LOT 시작: ${row.LotNumber} (Recipe: ${row.Package || '-'})`,
+            LotId: row.Id,
+          },
+        });
+        lastLotSnapshot[row.Id] = { Id: row.Id, LotNumber: row.LotNumber, EndTime: row.EndTime };
+
+      } else if (!prev.EndTime && row.EndTime) {
+        // LOT 종료
+        console.log(`[Poller] LOT 종료 감지: ${row.LotNumber}`);
+        const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+        wsManager.broadcast({
+          type: 'NEW_EVENT',
+          data: {
+            Id: `lot-end-${row.Id}`,
+            Time: row.EndTime || now,
+            LogType: 4,
+            Description: `LOT 종료: ${row.LotNumber} (Recipe: ${row.Package || '-'})`,
+            LotId: row.Id,
+          },
+        });
+        lastLotSnapshot[row.Id] = { Id: row.Id, LotNumber: row.LotNumber, EndTime: row.EndTime };
+      }
+    }
+  } catch (err) {
+    console.error('[Poller] LOT 폴링 오류:', err.message);
+  }
+}
+
+/**
  * 폴링 시작
  * index.js에서 서버 시작 시 한 번 호출
  */
 function start() {
   console.log(`[Poller] 상태 폴링 시작 (${config.POLL_INTERVAL_MS}ms 간격)`);
   console.log(`[Poller] 이벤트 폴링 시작 (${config.EVENT_POLL_INTERVAL_MS}ms 간격)`);
+  console.log(`[Poller] LOT 폴링 시작 (${config.POLL_INTERVAL_MS}ms 간격)`);
 
   // 즉시 한 번 실행 후 인터벌 설정
   pollStatus();
   pollEvents();
+  pollLots();
 
   setInterval(pollStatus, config.POLL_INTERVAL_MS);
   setInterval(pollEvents, config.EVENT_POLL_INTERVAL_MS);
+  setInterval(pollLots, config.POLL_INTERVAL_MS);
 }
 
 /**

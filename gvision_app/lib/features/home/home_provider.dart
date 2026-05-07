@@ -55,8 +55,8 @@ class HomeProvider extends ChangeNotifier {
         if (_recentEvents.length > 100) _recentEvents.removeLast();
         notifyListeners();
 
-        // ALERT이면 로컬 알림 발송
-        if (msg.type == WsMessageType.alert) {
+        // ALERT 타입이거나, NEW_EVENT라도 isAlert(LOT 포함)이면 알림 발송
+        if (msg.type == WsMessageType.alert || event.isAlert) {
           NotificationService.showAlert(
             title: '[${event.logTypeLabel}] 이벤트 발생',
             body: event.description,

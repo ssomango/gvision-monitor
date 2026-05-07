@@ -15,8 +15,8 @@ class Lot {
 
   factory Lot.fromJson(Map<String, dynamic> json) => Lot(
         id: json['Id'] as int? ?? json['id'] as int? ?? 0,
-        lotNo: json['LotNo'] as String? ?? json['lotNo'] as String? ?? '',
-        recipeName: json['RecipeName'] as String? ?? json['recipeName'] as String?,
+        lotNo: json['LotNumber'] as String? ?? json['LotNo'] as String? ?? json['lotNo'] as String? ?? '',
+        recipeName: json['Package'] as String? ?? json['RecipeName'] as String? ?? json['recipeName'] as String?,
         startTime: json['StartTime'] as String? ?? json['startTime'] as String? ?? '',
         endTime: json['EndTime'] as String? ?? json['endTime'] as String?,
       );
