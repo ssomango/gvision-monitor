@@ -21,22 +21,34 @@ class GvisionEvent {
     this.imagePath,
   });
 
-  factory GvisionEvent.fromJson(Map<String, dynamic> json) => GvisionEvent(
-        id: json['Id'] as int? ?? json['id'] as int? ?? 0,
-        time: json['Time'] as String? ?? json['time'] as String? ?? '',
-        package: json['Package'] as String?,
-        lotId: json['LotId'] as int?,
-        camera: json['Camera'] as int?,
-        inspection: json['Inspection'] as int?,
-        logType: json['LogType'] as int? ?? json['logType'] as int? ?? 0,
-        description: json['Description'] as String? ??
-            json['description'] as String? ??
-            '',
-        imagePath: json['ImagePath'] as String?,
-      );
+  static int _parseId(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
 
-  // ELog enum: SystemLogs=1, InspectionLogs=2, DatabaseLogs=3, LOTLogs=4, RecipeLogs=5
-  bool get isAlert => logType == 1 || logType == 2;
+    if (value is String) {
+      final parsed = int.tryParse(value);
+      if (parsed != null) return parsed;
+      return value.hashCode;
+    }
+
+    return 0;
+  }
+
+  factory GvisionEvent.fromJson(Map<String, dynamic> json) => GvisionEvent(
+    id: _parseId(json['Id'] ?? json['id']),
+    time: json['Time'] as String? ?? json['time'] as String? ?? '',
+    package: json['Package'] as String?,
+    lotId: json['LotId'] as int?,
+    camera: json['Camera'] as int?,
+    inspection: json['Inspection'] as int?,
+    logType: json['LogType'] as int? ?? json['logType'] as int? ?? 0,
+    description: json['Description'] as String? ??
+        json['description'] as String? ??
+        '',
+    imagePath: json['ImagePath'] as String?,
+  );
+
+  bool get isAlert => logType == 1 || logType == 2 || logType == 4;
 
   String get logTypeLabel {
     switch (logType) {

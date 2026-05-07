@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
 import 'inspection_provider.dart';
 import '../../shared/widgets/stat_card.dart';
+import '../../shared/widgets/dashboard_card.dart';
 
 class InspectionScreen extends StatefulWidget {
   const InspectionScreen({super.key});
@@ -31,12 +32,9 @@ class _InspectionScreenState extends State<InspectionScreen> {
         children: [
           _tabSelector(),
           Expanded(
-            child: RefreshIndicator(
-              onRefresh: p.refresh,
-              child: _tabIndex == 0
-                  ? _overviewTab(p)
-                  : _shotDetailTab(p),
-            ),
+            child: _tabIndex == 0
+                ? _overviewTab(p)
+                : _shotDetailTab(p),
           ),
         ],
       ),
@@ -71,17 +69,59 @@ class _InspectionScreenState extends State<InspectionScreen> {
 
   Widget _overviewTab(InspectionProvider p) {
     return ListView(
+      padding: const EdgeInsets.only(bottom: 24),
       children: [
         _rangeSelector(p),
-        _sectionHeader(context, '오늘 검사 결과'),
-        _summaryGrid(p),
+
+        _sectionHeader(context, '현재 상태'),
+        _fieldStatusCard(p),
+
         _sectionHeader(context, '수율 트렌드'),
         _dropThresholdSelector(p),
         _abnormalThresholdSelector(p),
         _yieldTrendChart(p),
-        _sectionHeader(context, '검사 타입별 현황'),
-        _typeTable(p),
-        const SizedBox(height: 24),
+
+        const SizedBox(height: 8),
+
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: _resultTrendChart(p)),
+              const SizedBox(width: 12),
+              Expanded(child: _typeNgTrendChart(p)),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    _sectionHeader(context, '검사 결과 요약'),
+                    _summaryGrid(p),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  children: [
+                    _sectionHeader(context, '검사 타입별 현황'),
+                    _typeTable(p),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -90,30 +130,42 @@ class _InspectionScreenState extends State<InspectionScreen> {
     final data = p.series;
 
     if (data.isEmpty) {
-      return ListView(
-        children: [
-          Padding(
-            padding: EdgeInsets.all(24),
-            child: Center(child: Text('Shot 데이터 없음')),
-          ),
-        ],
-      );
+      return const Center(child: Text('Shot 데이터 없음'));
     }
 
     return ListView(
+      padding: const EdgeInsets.only(bottom: 24),
       children: [
         _rangeSelector(p),
-        // _sectionHeader(context, 'X/Y Offset 변화'),
-        // _offsetTrendChart(p),
+
         _sectionHeader(context, '최근 이상 Shot 주변 컨텍스트'),
         _alertContextCard(p),
-        _sectionHeader(context, '시간대별 검사 결과 분포'),
-        _resultTrendChart(p),
-        _sectionHeader(context, '검사 타입별 NG율 변화'),
-        _typeNgTrendChart(p),
-        _sectionHeader(context, 'Shot별 검사 상세'),
-        ...data.map((shot) => _shotTile(shot)),
-        const SizedBox(height: 24),
+
+        const SizedBox(height: 8),
+
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: _resultTrendChart(p)),
+              const SizedBox(width: 12),
+              Expanded(child: _typeNgTrendChart(p)),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        _sectionHeader(context, 'Shot 상세 리스트'),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Card(
+            child: Column(
+              children: data.map((shot) => _shotTile(shot)).toList(),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -219,6 +271,105 @@ class _InspectionScreenState extends State<InspectionScreen> {
       ),
     ),
   );
+
+  Widget _fieldStatusCard(InspectionProvider p) {
+    String status;
+    String message;
+    Color color;
+    IconData icon;
+
+    if (p.yieldRate >= 99) {
+      status = '정상';
+      message = '현재 검사 수율이 안정권입니다. 주요 이상 징후는 낮습니다.';
+      color = const Color(0xFF43A047);
+      icon = Icons.check_circle;
+    } else if (p.yieldRate >= 95) {
+      status = '주의';
+      message = '수율이 목표 기준에 근접하거나 일부 하락했습니다. 최근 Shot과 검사 타입별 NG율을 확인하세요.';
+      color = Colors.orange;
+      icon = Icons.warning_amber_rounded;
+    } else {
+      status = '위험';
+      message = '수율이 낮습니다. 최근 이상 Shot 주변 컨텍스트와 REJECT 집중 시간대를 우선 확인하세요.';
+      color = const Color(0xFFE53935);
+      icon = Icons.error;
+    }
+
+    String mainNgType = '-';
+    int maxNg = 0;
+
+    final ngTypes = {
+      'MARK': p.markNg,
+      'BGA': p.bgaNg,
+      '2D CODE': p.codeNg,
+    };
+
+    for (final e in ngTypes.entries) {
+      if (e.value > maxNg) {
+        maxNg = e.value;
+        mainNgType = e.key;
+      }
+    }
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: color, size: 28),
+                const SizedBox(width: 10),
+                Text(
+                  status,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${p.yieldRate.toStringAsFixed(1)}%',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              message,
+              style: const TextStyle(
+                fontSize: 12,
+                height: 1.35,
+                color: Colors.white70,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white10,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                maxNg > 0
+                    ? '우선 확인 대상: $mainNgType 검사에서 NG $maxNg건 발생'
+                    : '우선 확인 대상: 현재 뚜렷한 NG 집중 타입 없음',
+                style: const TextStyle(fontSize: 12, color: Colors.white70),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _summaryGrid(InspectionProvider p) {
     return GridView.count(
@@ -919,52 +1070,62 @@ class _InspectionScreenState extends State<InspectionScreen> {
     Widget? legend,
     String? summary,
   }) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+    return DashboardCard(
+      title: title,
+      description: description,
+      icon: Icons.insights,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (legend != null) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.06),
+                borderRadius: BorderRadius.circular(8),
               ),
+              child: legend,
             ),
-            const SizedBox(height: 4),
-            Text(
-              description,
-              style: const TextStyle(
-                fontSize: 11,
-                color: Colors.white54,
-              ),
-            ),
-            if (legend != null) ...[
-              const SizedBox(height: 8),
-              legend,
-            ],
             const SizedBox(height: 12),
-            chart,
-            if (summary != null) ...[
-              const SizedBox(height: 10),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.white10,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  summary,
-                  style: const TextStyle(fontSize: 11, color: Colors.white70),
+          ],
+          chart,
+          if (summary != null && summary.trim().isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(11),
+              decoration: BoxDecoration(
+                color: const Color(0xFF42A5F5).withOpacity(0.10),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: const Color(0xFF42A5F5).withOpacity(0.25),
                 ),
               ),
-            ],
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.info_outline,
+                    size: 16,
+                    color: Color(0xFF90CAF9),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      summary,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        height: 1.35,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -973,11 +1134,22 @@ class _InspectionScreenState extends State<InspectionScreen> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.circle, size: 8, color: color),
-        const SizedBox(width: 4),
+        Container(
+          width: 9,
+          height: 9,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 5),
         Text(
           label,
-          style: const TextStyle(fontSize: 10, color: Colors.white70),
+          style: const TextStyle(
+            fontSize: 10,
+            color: Colors.white70,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
     );

@@ -86,21 +86,73 @@ function getRecentEvents(limit = 50, logType = null) {
   const db = getDb();
   if (!db) return [];
 
+  // histories 테이블 조회
   let sql = `
     SELECT Id, Time, Package, LotId, Camera, Inspection, LogType, Description, ImagePath
     FROM histories
   `;
   const params = [];
 
-  if (logType) {
+  if (logType && logType != 4) {
     sql += ` WHERE LogType = ?`;
     params.push(logType);
+  } else if (!logType) {
+    // 전체 조회 시 histories만
   }
 
   sql += ` ORDER BY Id DESC LIMIT ?`;
   params.push(limit);
 
-  return db.prepare(sql).all(...params);
+  let events = db.prepare(sql).all(...params);
+
+  // logType=4(LOT) 또는 전체 조회 시 lot 테이블에서 LOT 이벤트 합치기
+  if (!logType || logType == 4) {
+    const lots = db.prepare(`
+      SELECT Id, LotNumber, Package, StartTime, EndTime FROM lot ORDER BY Id DESC LIMIT 50
+    `).all();
+
+    const lotEvents = [];
+    for (const lot of lots) {
+      if (lot.StartTime) {
+        lotEvents.push({
+          Id: `lot-start-${lot.Id}`,
+          Time: lot.StartTime,
+          Package: lot.Package,
+          LotId: lot.Id,
+          Camera: null,
+          Inspection: null,
+          LogType: 4,
+          Description: `LOT 시작: ${lot.LotNumber} (Recipe: ${lot.Package || '-'})`,
+          ImagePath: null,
+        });
+      }
+      if (lot.EndTime) {
+        lotEvents.push({
+          Id: `lot-end-${lot.Id}`,
+          Time: lot.EndTime,
+          Package: lot.Package,
+          LotId: lot.Id,
+          Camera: null,
+          Inspection: null,
+          LogType: 4,
+          Description: `LOT 종료: ${lot.LotNumber} (Recipe: ${lot.Package || '-'})`,
+          ImagePath: null,
+        });
+      }
+    }
+
+    if (logType == 4) {
+      // LOT 전용 탭: lot 이벤트만
+      events = lotEvents;
+    } else {
+      // 전체 탭: histories + lot 이벤트 합쳐서 시간순 정렬
+      events = [...events, ...lotEvents]
+        .sort((a, b) => (b.Time > a.Time ? 1 : -1))
+        .slice(0, limit);
+    }
+  }
+
+  return events;
 }
 
 /**
@@ -285,7 +337,18 @@ function getLotStats(lotId) {
     GROUP BY InspectionType
   `).all(lotId);
 
-  return { ...lot, stats };
+  const overall = db.prepare(`
+    SELECT
+      COUNT(*) AS total,
+      SUM(CASE WHEN Item = 'PASS' THEN 1 ELSE 0 END) AS good,
+      SUM(CASE WHEN Item LIKE '%NoDevice%' THEN 1 ELSE 0 END) AS noDevice,
+      SUM(CASE WHEN Item LIKE '%XOut%' THEN 1 ELSE 0 END) AS xout,
+      SUM(CASE WHEN Item != 'PASS' AND Item NOT LIKE '%NoDevice%' AND Item NOT LIKE '%XOut%' THEN 1 ELSE 0 END) AS reject
+    FROM inspection_results
+    WHERE LotId = ?
+  `).get(lotId);
+
+  return { ...lot, stats, ...overall };
 }
 
 /**
