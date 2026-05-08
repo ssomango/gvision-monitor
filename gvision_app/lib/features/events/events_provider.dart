@@ -18,6 +18,7 @@ class EventsProvider extends ChangeNotifier {
   }
 
   List<GvisionEvent> get events => List.unmodifiable(_events);
+  int? get activeLogType => _activeLogType;
 
   Future<void> _init() async {
     await _fetch();
@@ -40,7 +41,23 @@ class EventsProvider extends ChangeNotifier {
     loading = true;
     notifyListeners();
     try {
-      final events = await EventsApi.fetchRecent(limit: 100, logType: logType);
+      final List<GvisionEvent> events;
+
+      if (logType != null) {
+        // 특정 탭: 해당 타입만 조회
+        events = await EventsApi.fetchRecent(limit: 100, logType: logType);
+      } else {
+        // 전체 탭: 타입별로 따로 불러와서 합침
+        final results = await Future.wait([
+          EventsApi.fetchRecent(limit: 50, logType: 2), // 검사
+          EventsApi.fetchRecent(limit: 30, logType: 1), // 시스템
+          EventsApi.fetchRecent(limit: 20, logType: 4), // LOT
+          EventsApi.fetchRecent(limit: 20, logType: 5), // Recipe
+        ]);
+        events = results.expand((e) => e).toList()
+          ..sort((a, b) => b.time.compareTo(a.time));
+      }
+
       _events
         ..clear()
         ..addAll(events);

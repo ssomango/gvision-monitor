@@ -94,11 +94,6 @@ async function pollStatus() {
  */
 function pollEvents() {
   try {
-    const dbInstance = require('better-sqlite3');
-    const fs = require('fs');
-
-    if (!fs.existsSync(config.DB_PATH)) return;
-
     // lastHistoryId 초기화 (첫 실행 시)
     if (lastHistoryId === 0) {
       lastHistoryId = db.getLatestHistoryId();
@@ -106,30 +101,28 @@ function pollEvents() {
       return;
     }
 
-    // lastHistoryId 이후에 추가된 이벤트 조회
-    const Database = require('better-sqlite3');
-    const fs2 = require('fs');
-    if (!fs2.existsSync(config.DB_PATH)) return;
+    const activeDb = db.getDb();
+    if (!activeDb) return;
 
-    const tempDb = new Database(config.DB_PATH, { readonly: true });
-    const newEvents = tempDb.prepare(`
+    const newEvents = activeDb.prepare(`
       SELECT Id, Time, Package, LotId, Camera, Inspection, LogType, Description, ImagePath
       FROM histories
       WHERE Id > ?
       ORDER BY Id ASC
     `).all(lastHistoryId);
-    tempDb.close();
 
     if (newEvents.length === 0) return;
 
     // 새 이벤트를 하나씩 WebSocket으로 push
     for (const event of newEvents) {
-      const isAlert = ALERT_LOG_TYPES.includes(event.LogType);
+      // histories LogType=4는 실제 검사 결과 → 앱에는 LogType=2(검사)로 전달
+      const appLogType = event.LogType === 4 ? 2 : event.LogType;
+      const isAlert = ALERT_LOG_TYPES.includes(appLogType);
       const msgType = isAlert ? 'ALERT' : 'NEW_EVENT';
 
-      console.log(`[Poller] 새 이벤트 (${msgType}): Id=${event.Id}, LogType=${event.LogType}, ${event.Description?.slice(0, 50)}`);
+      console.log(`[Poller] 새 이벤트 (${msgType}): Id=${event.Id}, LogType=${appLogType}, ${event.Description?.slice(0, 50)}`);
 
-      wsManager.broadcast({ type: msgType, data: event });
+      wsManager.broadcast({ type: msgType, data: { ...event, LogType: appLogType } });
     }
 
     // 마지막 Id 업데이트
@@ -145,13 +138,10 @@ function pollEvents() {
  */
 function pollLots() {
   try {
-    const Database = require('better-sqlite3');
-    const fs = require('fs');
-    if (!fs.existsSync(config.DB_PATH)) return;
+    const activeDb = db.getDb();
+    if (!activeDb) return;
 
-    const tempDb = new Database(config.DB_PATH, { readonly: true });
-    const rows = tempDb.prepare(`SELECT Id, LotNumber, Package, StartTime, EndTime FROM lot ORDER BY Id DESC LIMIT 20`).all();
-    tempDb.close();
+    const rows = activeDb.prepare(`SELECT Id, LotNumber, Package, StartTime, EndTime FROM lot ORDER BY Id DESC LIMIT 20`).all();
 
     // 첫 실행 시 현재 상태를 스냅샷으로만 저장 (과거 lot은 이벤트로 push 안 함)
     if (!lotSnapshotInitialized) {

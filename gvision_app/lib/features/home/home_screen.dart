@@ -8,6 +8,7 @@ import 'widgets/event_log_tile.dart';
 import 'widgets/yield_gauge_card.dart';
 import '../events/event_context_screen.dart';
 import '../../shared/widgets/dashboard_card.dart';
+import '../../core/models/event.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -182,37 +183,134 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _eventPanel(BuildContext context, HomeProvider provider) {
-    return DashboardCard(
-      title: '최근 이벤트 로그',
-      description: '최근 발생한 장비/검사/LOT/Recipe 이벤트를 확인합니다.',
-      icon: Icons.list_alt,
+    final groupedItems = <dynamic>[];
+
+    List<GvisionEvent> currentInspectionGroup = [];
+
+    for (final e in provider.recentEvents) {
+      if (e.logType == 2) {
+        currentInspectionGroup.add(e);
+        continue;
+      }
+
+      // 검사 이벤트 묶음 flush
+      if (currentInspectionGroup.isNotEmpty) {
+        groupedItems.add(List.of(currentInspectionGroup));
+        currentInspectionGroup.clear();
+      }
+
+      groupedItems.add(e);
+    }
+
+    // 마지막 검사 묶음 flush
+    if (currentInspectionGroup.isNotEmpty) {
+      groupedItems.add(List.of(currentInspectionGroup));
+    }
+
+    final visibleItems = groupedItems.take(15).toList();
+
+    final hasEvents = visibleItems.isNotEmpty;
+
+    return Card(
       margin: EdgeInsets.zero,
-      child: Expanded(
-        child: provider.recentEvents.isEmpty
-            ? const Center(
-          child: Text(
-            '이벤트 없음',
-            style: TextStyle(color: Colors.white38),
-          ),
-        )
-            : ListView.separated(
-          itemCount: provider.recentEvents.length,
-          separatorBuilder: (_, __) => const Divider(height: 1),
-          itemBuilder: (ctx, i) {
-            final e = provider.recentEvents[i];
-            return EventLogTile(
-              event: e,
-              onTap: e.isAlert
-                  ? () => Navigator.push(
-                ctx,
-                MaterialPageRoute(
-                  builder: (_) => EventContextScreen(eventId: e.id),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 14, 16, 4),
+            child: Row(
+              children: [
+                Icon(Icons.list_alt, size: 18, color: Color(0xFF90CAF9)),
+                SizedBox(width: 8),
+                Text(
+                  '최근 이벤트 로그',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
-              )
-                  : null,
-            );
-          },
-        ),
+              ],
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+    '최근 이벤트를 시간순으로 표시하고, 연속된 검사 이벤트는 하나의 묶음으로 접어서 보여줍니다.',
+              style: TextStyle(fontSize: 11, color: Colors.white54),
+            ),
+          ),
+          const SizedBox(height: 10),
+          const Divider(height: 1),
+
+          Expanded(
+            child: !hasEvents
+                ? const Center(
+              child: Text(
+                '이벤트 없음',
+                style: TextStyle(color: Colors.white38),
+              ),
+            )
+                : ListView(
+              children: visibleItems.map((item) {
+                // 검사 이벤트 그룹
+                if (item is List<GvisionEvent>) {
+                  return ExpansionTile(
+                    initiallyExpanded: false,
+                    tilePadding:
+                    const EdgeInsets.symmetric(horizontal: 16),
+                    childrenPadding: EdgeInsets.zero,
+                    leading: const Icon(
+                      Icons.analytics_outlined,
+                      size: 18,
+                      color: Color(0xFF42A5F5),
+                    ),
+                    title: Text(
+                      '검사 이벤트 ${item.length}건',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Text(
+                      item.first.time,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Colors.white54,
+                      ),
+                    ),
+                    children: item.map((e) {
+                      return EventLogTile(
+                        event: e,
+                        onTap: e.isAlert
+                            ? () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                EventContextScreen(eventId: e.id),
+                          ),
+                        )
+                            : null,
+                      );
+                    }).toList(),
+                  );
+                }
+
+                // 일반 이벤트
+                final e = item as GvisionEvent;
+
+                return EventLogTile(
+                  event: e,
+                  onTap: e.isAlert
+                      ? () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          EventContextScreen(eventId: e.id),
+                    ),
+                  )
+                      : null,
+                );
+              }).toList(),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -48,7 +48,7 @@ class GvisionEvent {
     imagePath: json['ImagePath'] as String?,
   );
 
-  bool get isAlert => logType == 1 || logType == 2 || logType == 4;
+  bool get isAlert => logType == 1 || logType == 2;
 
   String get logTypeLabel {
     switch (logType) {
