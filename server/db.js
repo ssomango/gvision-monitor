@@ -283,6 +283,28 @@ function getErrorBreakdown(lotId) {
 }
 
 /**
+ * 전체 또는 오늘 기준 불량 유형별 건수
+ * @param {boolean} todayOnly - true면 오늘(KST) 데이터만
+ */
+function getErrorBreakdownGlobal(todayOnly = false) {
+  const db = getDb();
+  if (!db) return [];
+
+  const where = todayOnly
+    ? `WHERE Item != 'PASS' AND date(StartTIme) = date('now', '+9 hours')`
+    : `WHERE Item != 'PASS'`;
+
+  return db.prepare(`
+    SELECT Item AS errorType, COUNT(*) AS count
+    FROM inspection_results
+    ${where}
+    GROUP BY Item
+    ORDER BY count DESC
+    LIMIT 10
+  `).all();
+}
+
+/**
  * XY 위치별 불량 수 (히트맵용)
  */
 function getFailHeatmap(lotId) {
@@ -368,6 +390,7 @@ function getLatestHistoryId() {
 module.exports = {
   getDb,
   getRecentEvents,
+  getErrorBreakdownGlobal,
   getEventContext,
   getInspectionSeries,
   getYieldSeries,

@@ -72,12 +72,18 @@ router.get('/duration', (req, res) => {
 });
 
 // GET /api/inspections/errors
+// lotId 없으면 전체 또는 오늘 기준 불량 유형별 집계 반환
 router.get('/errors', (req, res) => {
-  const lotId = parseInt(req.query.lotId);
-  if (!lotId) return res.status(400).json({ error: 'lotId 파라미터가 필요합니다.' });
+  const lotId = req.query.lotId ? parseInt(req.query.lotId) : null;
+  const today = req.query.today === '1';
 
-  const data = db.getErrorBreakdown(lotId);
-  res.json({ lotId, data });
+  if (lotId) {
+    const data = db.getErrorBreakdown(lotId);
+    return res.json({ lotId, data });
+  }
+
+  const data = db.getErrorBreakdownGlobal(today);
+  res.json({ today, data });
 });
 
 // GET /api/inspections/heatmap

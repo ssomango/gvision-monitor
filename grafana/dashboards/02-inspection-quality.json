@@ -1457,7 +1457,7 @@
       },
       "gridPos": {
         "h": 10,
-        "w": 8,
+        "w": 11,
         "x": 0,
         "y": 27
       },
@@ -1494,125 +1494,11 @@
       "datasource": {
         "uid": "gvision_sqlite"
       },
-      "description": "누적 불량 원인 Top 5. 가장 빈번한 원인부터 집중 점검.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "fixedColor": "semi-dark-red",
-            "mode": "fixed"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "fillOpacity": 80,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineWidth": 1,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 10,
-        "w": 8,
-        "x": 8,
-        "y": 27
-      },
-      "id": 34,
-      "options": {
-        "barRadius": 0,
-        "barWidth": 0.97,
-        "fullHighlight": false,
-        "groupWidth": 0.7,
-        "legend": {
-          "calcs": [],
-          "displayMode": "hidden",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "orientation": "horizontal",
-        "showValue": "auto",
-        "stacking": "none",
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        },
-        "xField": "error_type",
-        "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 0
-      },
-      "pluginVersion": "11.4.0",
-      "targets": [
-        {
-          "datasource": {
-            "uid": "gvision_sqlite"
-          },
-          "rawQueryText": "SELECT Item AS error_type, COUNT(*) AS count FROM inspection_results WHERE Item != 'PASS' AND date(StartTIme) = date('now', '+9 hours') GROUP BY Item ORDER BY count DESC LIMIT 5",
-          "refId": "A",
-          "timeColumns": []
-        }
-      ],
-      "title": "불량 유형 파레토 (오늘)",
-      "type": "barchart"
-    },
-    {
-      "datasource": {
-        "uid": "gvision_sqlite"
-      },
       "description": "불량 원인 분포. 상위 원인부터 정렬.",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "fixedColor": "red",
-            "mode": "fixed"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "fillOpacity": 80,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineWidth": 1,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "mode": "palette-classic"
           },
           "mappings": [],
           "thresholds": {
@@ -1621,10 +1507,6 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           }
@@ -1633,32 +1515,35 @@
       },
       "gridPos": {
         "h": 10,
-        "w": 8,
-        "x": 16,
+        "w": 13,
+        "x": 11,
         "y": 27
       },
       "id": 3,
       "options": {
-        "barRadius": 0,
-        "barWidth": 0.97,
-        "fullHighlight": false,
-        "groupWidth": 0.7,
+        "displayMode": "gradient",
         "legend": {
           "calcs": [],
-          "displayMode": "hidden",
+          "displayMode": "list",
           "placement": "bottom",
-          "showLegend": true
+          "showLegend": false
         },
+        "maxVizHeight": 300,
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "namePlacement": "auto",
         "orientation": "horizontal",
-        "showValue": "auto",
-        "stacking": "none",
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
         },
-        
-        "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 0
+        "showUnfilled": true,
+        "sizing": "auto",
+        "text": {},
+        "valueMode": "color"
       },
       "pluginVersion": "11.4.0",
       "targets": [
@@ -1667,13 +1552,14 @@
             "uid": "gvision_sqlite"
           },
           "queryText": "SELECT Item AS error_type, COUNT(*) AS count FROM inspection_results WHERE Item != 'PASS' GROUP BY Item ORDER BY count DESC LIMIT 10",
+          "queryType": "table",
           "rawQueryText": "SELECT Item AS error_type, COUNT(*) AS count FROM inspection_results WHERE Item != 'PASS' GROUP BY Item ORDER BY count DESC LIMIT 10",
           "refId": "A",
           "timeColumns": []
         }
       ],
-      "title": "불량 유형별 건수 (파레토)",
-      "type": "barchart"
+      "title": "불량 유형별 건수",
+      "type": "bargauge"
     },
     {
       "datasource": {
@@ -1922,8 +1808,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2054,6 +1939,6 @@
   "timezone": "",
   "title": "02. Inspection 분석",
   "uid": "gvision-quality",
-  "version": 10,
+  "version": 25,
   "weekStart": ""
 }

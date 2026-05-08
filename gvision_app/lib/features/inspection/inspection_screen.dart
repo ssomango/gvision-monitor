@@ -158,11 +158,18 @@ class _InspectionScreenState extends State<InspectionScreen> {
         const SizedBox(height: 12),
 
         _sectionHeader(context, 'Shot 상세 리스트'),
+
+        _shotFilterBar(p),
+
+        const SizedBox(height: 8),
+
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Card(
             child: Column(
-              children: data.map((shot) => _shotTile(shot)).toList(),
+              children: p.filteredShots
+                  .map((shot) => _shotTile(shot))
+                  .toList(),
             ),
           ),
         ),
@@ -1439,6 +1446,131 @@ class _InspectionScreenState extends State<InspectionScreen> {
             fontSize: 11,
             fontWeight: selected ? FontWeight.bold : FontWeight.normal,
             color: selected ? Colors.white : Colors.white60,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _shotFilterBar(InspectionProvider p) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.filter_alt_outlined,
+                size: 18,
+                color: Colors.white54,
+              ),
+
+              const SizedBox(width: 8),
+
+              const Text(
+                'Shot 필터',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+
+              const SizedBox(width: 16),
+
+              _filterChip(
+                label: '전체',
+                selected: p.shotFilter == ShotResultFilter.all,
+                onTap: () {
+                  p.setShotFilter(ShotResultFilter.all);
+                },
+              ),
+
+              const SizedBox(width: 6),
+
+              _filterChip(
+                label: 'FAIL',
+                selected: p.shotFilter == ShotResultFilter.failOnly,
+                onTap: () {
+                  p.setShotFilter(ShotResultFilter.failOnly);
+                },
+              ),
+
+              const SizedBox(width: 6),
+
+              _filterChip(
+                label: '급락',
+                selected: p.shotFilter == ShotResultFilter.yieldDrop,
+                onTap: () {
+                  p.setShotFilter(ShotResultFilter.yieldDrop);
+                },
+              ),
+
+              const Spacer(),
+
+              DropdownButton<String>(
+                value: p.selectedInspectionType,
+                underline: const SizedBox(),
+                dropdownColor: const Color(0xFF1E1E1E),
+                items: const [
+                  DropdownMenuItem(
+                    value: 'ALL',
+                    child: Text('전체 타입'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'MARK',
+                    child: Text('MARK'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'BGA',
+                    child: Text('BGA'),
+                  ),
+                  DropdownMenuItem(
+                    value: '2D',
+                    child: Text('2D CODE'),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    p.setInspectionType(value);
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _filterChip({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 10,
+          vertical: 6,
+        ),
+        decoration: BoxDecoration(
+          color: selected
+              ? const Color(0xFF1976D2)
+              : Colors.white10,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight:
+            selected ? FontWeight.bold : FontWeight.normal,
+            color:
+            selected ? Colors.white : Colors.white70,
           ),
         ),
       ),

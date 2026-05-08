@@ -5,6 +5,12 @@ import '../../core/ws/ws_client.dart';
 
 enum RangeType { hour1, hour6, today }
 
+enum ShotResultFilter {
+  all,
+  failOnly,
+  yieldDrop,
+}
+
 class InspectionProvider extends ChangeNotifier {
   final WsClient _ws;
 
@@ -151,5 +157,53 @@ class InspectionProvider extends ChangeNotifier {
     _sub?.cancel();
     _pollTimer?.cancel();
     super.dispose();
+  }
+
+  //shot filter
+  ShotResultFilter shotFilter = ShotResultFilter.all;
+  String selectedInspectionType = 'ALL'; // ALL, MARK, BGA, 2D
+  double yieldThreshold = 90.0;
+
+  void setShotFilter(ShotResultFilter filter) {
+    shotFilter = filter;
+    notifyListeners();
+  }
+
+  void setInspectionType(String type) {
+    selectedInspectionType = type;
+    notifyListeners();
+  }
+
+  void setYieldThreshold(double value) {
+    yieldThreshold = value;
+    notifyListeners();
+  }
+
+  List<dynamic> get filteredShots {
+    return _series.where((shot) {
+      final item = shot['Item'] as String? ?? '';
+      final type = shot['InspectionType'] as int? ?? 0;
+
+      final isFail = item != 'PASS';
+
+      final typeName = switch (type) {
+        1 => 'MARK',
+        3 => 'BGA',
+        5 => '2D',
+        _ => 'UNKNOWN',
+      };
+
+      final matchType =
+          selectedInspectionType == 'ALL' ||
+              selectedInspectionType == typeName;
+
+      final matchResult = switch (shotFilter) {
+        ShotResultFilter.all => true,
+        ShotResultFilter.failOnly => isFail,
+        ShotResultFilter.yieldDrop => isFail,
+      };
+
+      return matchType && matchResult;
+    }).toList();
   }
 }
