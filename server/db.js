@@ -94,8 +94,9 @@ function getRecentEvents(limit = 50, logType = null) {
   const params = [];
 
   if (logType && logType != 4) {
-    sql += ` WHERE LogType = ?`;
-    params.push(logType);
+    // logType=2(검사) 요청 시 histories의 LogType=4(실제 검사 결과)도 포함
+    const dbLogType = logType == 2 ? [2, 4] : [logType];
+    sql += ` WHERE LogType IN (${dbLogType.join(',')})`;
   } else if (!logType) {
     // 전체 조회 시 histories만
   }
@@ -103,7 +104,9 @@ function getRecentEvents(limit = 50, logType = null) {
   sql += ` ORDER BY Id DESC LIMIT ?`;
   params.push(limit);
 
-  let events = db.prepare(sql).all(...params);
+  // histories의 LogType=4는 실제로 검사 결과이므로 앱에는 LogType=2(검사)로 전달
+  let events = db.prepare(sql).all(...params)
+    .map(e => e.LogType === 4 ? { ...e, LogType: 2 } : e);
 
   // logType=4(LOT) 또는 전체 조회 시 lot 테이블에서 LOT 이벤트 합치기
   if (!logType || logType == 4) {
@@ -363,6 +366,7 @@ function getLatestHistoryId() {
 }
 
 module.exports = {
+  getDb,
   getRecentEvents,
   getEventContext,
   getInspectionSeries,

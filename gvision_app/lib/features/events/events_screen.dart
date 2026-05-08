@@ -49,7 +49,10 @@ class _EventsScreenState extends State<EventsScreen>
           isScrollable: true,
           tabAlignment: TabAlignment.start,
           tabs: _labels.map((l) => Tab(text: l)).toList(),
-          onTap: (i) => provider.filterBy(_filters[i]),
+          onTap: (i) {
+            setState(() => _selectedEvent = null);
+            provider.filterBy(_filters[i]);
+          },
         ),
       ),
       body: provider.loading
@@ -78,6 +81,9 @@ class _EventsScreenState extends State<EventsScreen>
   }
 
   Widget _eventListPanel(EventsProvider provider) {
+    final isAllTab = provider.activeLogType == null;
+    final listItems = isAllTab ? _buildGroupedItems(provider.events) : null;
+
     return Card(
       margin: const EdgeInsets.all(12),
       child: Column(
@@ -108,17 +114,67 @@ class _EventsScreenState extends State<EventsScreen>
           const SizedBox(height: 10),
           const Divider(height: 1),
           Expanded(
-            child: ListView.separated(
-              itemCount: provider.events.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (ctx, i) {
-                final event = provider.events[i];
-                return _buildTile(ctx, event);
-              },
-            ),
+            child: isAllTab
+                ? ListView.separated(
+                    itemCount: listItems!.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (ctx, i) {
+                      final item = listItems[i];
+                      if (item is List<GvisionEvent>) {
+                        return _buildInspectionGroup(ctx, item);
+                      }
+                      return _buildTile(ctx, item as GvisionEvent);
+                    },
+                  )
+                : ListView.separated(
+                    itemCount: provider.events.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (ctx, i) => _buildTile(ctx, provider.events[i]),
+                  ),
           ),
         ],
       ),
+    );
+  }
+
+  List<dynamic> _buildGroupedItems(List<GvisionEvent> events) {
+    final grouped = <dynamic>[];
+    List<GvisionEvent> currentGroup = [];
+
+    for (final e in events) {
+      if (e.logType == 2) {
+        currentGroup.add(e);
+        continue;
+      }
+      if (currentGroup.isNotEmpty) {
+        grouped.add(List<GvisionEvent>.of(currentGroup));
+        currentGroup.clear();
+      }
+      grouped.add(e);
+    }
+    if (currentGroup.isNotEmpty) {
+      grouped.add(List<GvisionEvent>.of(currentGroup));
+    }
+    return grouped;
+  }
+
+  Widget _buildInspectionGroup(BuildContext ctx, List<GvisionEvent> group) {
+    return ExpansionTile(
+      tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+      childrenPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.analytics_outlined, size: 18, color: Color(0xFF42A5F5)),
+      title: Text(
+        '검사 이벤트 ${group.length}건',
+        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+      ),
+      subtitle: Text(
+        _formatTime(group.first.time),
+        style: const TextStyle(fontSize: 11, color: Colors.white54),
+      ),
+      children: [
+        const Divider(height: 1),
+        ...group.map((e) => _buildTile(ctx, e)),
+      ],
     );
   }
 

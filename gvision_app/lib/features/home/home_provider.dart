@@ -31,10 +31,20 @@ class HomeProvider extends ChangeNotifier {
 
   Future<void> _loadEvents() async {
     try {
-      final events = await EventsApi.fetchRecent(limit: 30);
+      // 타입별로 따로 불러와서 합침 (검사 이벤트가 최근을 전부 차지하는 문제 방지)
+      final results = await Future.wait([
+        EventsApi.fetchRecent(limit: 30, logType: 2), // 검사
+        EventsApi.fetchRecent(limit: 10, logType: 1), // 시스템
+        EventsApi.fetchRecent(limit: 10, logType: 4), // LOT
+        EventsApi.fetchRecent(limit: 10, logType: 5), // Recipe
+      ]);
+
+      final combined = results.expand((e) => e).toList()
+        ..sort((a, b) => b.time.compareTo(a.time));
+
       _recentEvents
         ..clear()
-        ..addAll(events);
+        ..addAll(combined);
     } catch (_) {}
   }
 
@@ -55,8 +65,8 @@ class HomeProvider extends ChangeNotifier {
         if (_recentEvents.length > 100) _recentEvents.removeLast();
         notifyListeners();
 
-        // ALERT 타입이거나, NEW_EVENT라도 isAlert(LOT 포함)이면 알림 발송
-        if (msg.type == WsMessageType.alert || event.isAlert) {
+        // ALERT(logType 1,2 검사/시스템) 또는 LOT 이벤트(logType 4)면 알림 발송
+        if (msg.type == WsMessageType.alert || event.logType == 4) {
           NotificationService.showAlert(
             title: '[${event.logTypeLabel}] 이벤트 발생',
             body: event.description,
