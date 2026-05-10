@@ -263,18 +263,43 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
                 "color": "green",
                 "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
               }
             ]
-          },
-          "mappings": []
+          }
         },
         "overrides": []
       },
@@ -286,19 +311,25 @@
       },
       "id": 3,
       "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": true
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
         },
-        "orientation": "horizontal",
-        "displayMode": "gradient",
-        "showUnfilled": true,
-        "minVizWidth": 0,
-        "minVizHeight": 10,
-        "text": {}
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
       },
       "pluginVersion": "11.4.0",
       "targets": [
@@ -306,13 +337,15 @@
           "datasource": {
             "uid": "gvision_sqlite"
           },
+          "queryText": "SELECT CASE LogType WHEN 1 THEN 'System' WHEN 2 THEN 'Inspection' WHEN 4 THEN 'LOT' WHEN 5 THEN 'Recipe' ELSE CAST(LogType AS TEXT) END AS 구분, COUNT(*) AS count FROM histories WHERE Time >= datetime('now', '-15 hours') GROUP BY LogType ORDER BY count DESC",
+          "queryType": "table",
           "rawQueryText": "SELECT CASE LogType WHEN 1 THEN 'System' WHEN 2 THEN 'Inspection' WHEN 4 THEN 'LOT' WHEN 5 THEN 'Recipe' ELSE CAST(LogType AS TEXT) END AS 구분, COUNT(*) AS count FROM histories WHERE Time >= datetime('now', '-15 hours') GROUP BY LogType ORDER BY count DESC",
           "refId": "A",
           "timeColumns": []
         }
       ],
       "title": "구분별 이벤트 빈도",
-      "type": "bargauge"
+      "type": "barchart"
     },
     {
       "collapsed": false,
@@ -920,6 +953,28 @@
           "color": {
             "mode": "palette-classic"
           },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -928,8 +983,7 @@
                 "value": null
               }
             ]
-          },
-          "mappings": []
+          }
         },
         "overrides": []
       },
@@ -941,33 +995,42 @@
       },
       "id": 13,
       "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": true
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
         },
-        "orientation": "horizontal",
-        "displayMode": "gradient",
-        "showUnfilled": true,
-        "minVizWidth": 0,
-        "minVizHeight": 10,
-        "text": {}
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
       },
       "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
+            "type": "frser-sqlite-datasource",
             "uid": "gvision_sqlite"
           },
-          "rawQueryText": "SELECT CASE WHEN Description LIKE '%CameraTimeOut%' THEN 'CameraTimeout' WHEN Description LIKE '%NotInitializedCamera%' THEN 'Camera미초기화' WHEN Description LIKE '%PrsImageDequeue%' THEN 'PRS큐오류' WHEN Description LIKE '%CameraTrigger%' THEN 'CameraTrigger' WHEN Description LIKE '%UdpBinding%' THEN 'UDP바인딩오류' WHEN Description LIKE '%UdpSend%' THEN 'UDP송신오류' WHEN Description LIKE '%UdpSocket%' THEN 'UDP소켓오류' WHEN Description LIKE '%VisionNotFound%' THEN 'VisionNotFound' WHEN Description LIKE '%VisionIf%' THEN 'VisionIF오류' WHEN Description LIKE '%HalconLicense%' THEN 'HalconLicense' WHEN Description LIKE '%NoIllumination%' THEN 'NoIllumination' WHEN Description LIKE '%UnknownLight%' THEN '미확인조명' WHEN Description LIKE '%WrongSetting%' THEN 'WrongSetting' WHEN Description LIKE '%WrongGrid%' THEN 'WrongGridSize' WHEN Description LIKE '%NotAllowedMode%' THEN '모드요청오류' WHEN Description LIKE '%DuplicatedLot%' THEN 'LOT번호중복' ELSE '기타' END AS error_type, COUNT(*) AS count FROM histories WHERE LogType=1 AND Description LIKE '%Exception:%' AND Time >= datetime('now', '-15 hours') GROUP BY error_type ORDER BY count DESC",
+          "queryText": "SELECT CASE WHEN Description LIKE '%BLOB_NOT_FOUND%' THEN 'Blob 미검출' WHEN Description LIKE '%SYSTEM_ERROR%' THEN '시스템 오류' WHEN Description LIKE '%CameraTimeOut%' THEN 'Camera Timeout' WHEN Description LIKE '%VisionNotFound%' THEN 'Vision 미검출' WHEN Description LIKE '%DuplicatedLot%' THEN 'LOT번호 중복' WHEN Description LIKE '%WrongSetting%' THEN '설정 오류' ELSE '기타' END AS error_type, COUNT(*) AS count FROM histories WHERE LogType=1 AND Description NOT IN ('RUN START','GVISION START','SETUP START') AND Time >= datetime('now','-15 hours') GROUP BY error_type ORDER BY count DESC",
+          "queryType": "table",
+          "rawQueryText": "SELECT CASE WHEN Description LIKE '%BLOB_NOT_FOUND%' THEN 'Blob 미검출' WHEN Description LIKE '%SYSTEM_ERROR%' THEN '시스템 오류' WHEN Description LIKE '%CameraTimeOut%' THEN 'Camera Timeout' WHEN Description LIKE '%VisionNotFound%' THEN 'Vision 미검출' WHEN Description LIKE '%DuplicatedLot%' THEN 'LOT번호 중복' WHEN Description LIKE '%WrongSetting%' THEN '설정 오류' ELSE '기타' END AS error_type, COUNT(*) AS count FROM histories WHERE LogType=1 AND Description NOT IN ('RUN START','GVISION START','SETUP START') AND Time >= datetime('now','-15 hours') GROUP BY error_type ORDER BY count DESC",
           "refId": "A",
           "timeColumns": []
         }
       ],
       "title": "오류 유형별 발생 횟수",
-      "type": "bargauge"
+      "type": "barchart"
     },
     {
       "datasource": {
@@ -1354,6 +1417,6 @@
   "timezone": "",
   "title": "03. 이벤트 분석",
   "uid": "gvision-events",
-  "version": 9,
+  "version": 15,
   "weekStart": ""
 }
