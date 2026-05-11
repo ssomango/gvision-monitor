@@ -13,25 +13,63 @@
 const Database = require('better-sqlite3');
 const config = require('./config');
 const fs = require('fs');
+const path = require('path');
 
 let db = null;
+let dbPath = null;
+
+/**
+ * GvisionWpf가 실제로 쓰고 있는 DB 파일을 찾아 반환합니다.
+ * 같은 디렉터리에서 가장 최근에 수정된 .db 파일을 자동으로 선택합니다.
+ * GvisionWpf는 월별로 DB 파일을 교체할 수 있으므로 항상 최신 파일을 사용합니다.
+ */
+function resolveDbPath() {
+  const dir = path.dirname(config.DB_PATH);
+  if (!fs.existsSync(dir)) return null;
+
+  const candidates = fs.readdirSync(dir)
+    .filter(f => f.endsWith('.db') && !f.endsWith('-shm') && !f.endsWith('-wal'))
+    .map(f => ({ file: path.join(dir, f), mtime: fs.statSync(path.join(dir, f)).mtimeMs }))
+    .sort((a, b) => b.mtime - a.mtime);
+
+  return candidates.length > 0 ? candidates[0].file : null;
+}
+
+let lastPathCheckTime = 0;
+const PATH_CHECK_INTERVAL_MS = 60_000; // 1분마다 활성 파일 재확인
 
 /**
  * DB 연결을 가져옵니다.
- * DB 파일이 없으면 null을 반환합니다 (GvisionWpf가 아직 실행 안 된 경우).
+ * GvisionWpf가 DB 파일을 교체했으면 자동으로 재연결합니다.
  */
 function getDb() {
-  if (db) return db;
+  const now = Date.now();
+  let currentPath = dbPath;
 
-  if (!fs.existsSync(config.DB_PATH)) {
+  // 처음 연결이거나 1분마다 활성 파일 재확인
+  if (!currentPath || now - lastPathCheckTime > PATH_CHECK_INTERVAL_MS) {
+    currentPath = resolveDbPath();
+    lastPathCheckTime = now;
+  }
+
+  if (!currentPath) {
     console.warn(`[DB] 파일 없음: ${config.DB_PATH}`);
     console.warn('[DB] GvisionWpf가 실행된 적 있는지 확인하세요.');
     return null;
   }
 
-  // readonly: true → 읽기 전용 (GvisionWpf 쓰기와 충돌 방지)
-  db = new Database(config.DB_PATH, { readonly: true });
-  console.log(`[DB] 연결됨: ${config.DB_PATH}`);
+  // DB 파일이 교체됐으면 기존 연결 닫고 재연결
+  if (db && dbPath !== currentPath) {
+    console.log(`[DB] DB 파일 변경 감지: ${dbPath} → ${currentPath}`);
+    try { db.close(); } catch (_) {}
+    db = null;
+  }
+
+  if (!db) {
+    db = new Database(currentPath, { readonly: true });
+    dbPath = currentPath;
+    console.log(`[DB] 연결됨: ${currentPath}`);
+  }
   return db;
 }
 
@@ -48,21 +86,76 @@ function getRecentEvents(limit = 50, logType = null) {
   const db = getDb();
   if (!db) return [];
 
+  // histories 테이블 조회
   let sql = `
     SELECT Id, Time, Package, LotId, Camera, Inspection, LogType, Description, ImagePath
     FROM histories
   `;
   const params = [];
 
-  if (logType) {
-    sql += ` WHERE LogType = ?`;
-    params.push(logType);
+  if (logType && logType != 4) {
+    // logType=2(검사) 요청 시 histories의 LogType=4(실제 검사 결과)도 포함
+    const dbLogType = logType == 2 ? [2, 4] : [logType];
+    sql += ` WHERE LogType IN (${dbLogType.join(',')})`;
+  } else if (!logType) {
+    // 전체 조회 시 histories만
   }
 
   sql += ` ORDER BY Id DESC LIMIT ?`;
   params.push(limit);
 
-  return db.prepare(sql).all(...params);
+  // histories의 LogType=4는 실제로 검사 결과이므로 앱에는 LogType=2(검사)로 전달
+  let events = db.prepare(sql).all(...params)
+    .map(e => e.LogType === 4 ? { ...e, LogType: 2 } : e);
+
+  // logType=4(LOT) 또는 전체 조회 시 lot 테이블에서 LOT 이벤트 합치기
+  if (!logType || logType == 4) {
+    const lots = db.prepare(`
+      SELECT Id, LotNumber, Package, StartTime, EndTime FROM lot ORDER BY Id DESC LIMIT 50
+    `).all();
+
+    const lotEvents = [];
+    for (const lot of lots) {
+      if (lot.StartTime) {
+        lotEvents.push({
+          Id: `lot-start-${lot.Id}`,
+          Time: lot.StartTime,
+          Package: lot.Package,
+          LotId: lot.Id,
+          Camera: null,
+          Inspection: null,
+          LogType: 4,
+          Description: `LOT 시작: ${lot.LotNumber} (Recipe: ${lot.Package || '-'})`,
+          ImagePath: null,
+        });
+      }
+      if (lot.EndTime) {
+        lotEvents.push({
+          Id: `lot-end-${lot.Id}`,
+          Time: lot.EndTime,
+          Package: lot.Package,
+          LotId: lot.Id,
+          Camera: null,
+          Inspection: null,
+          LogType: 4,
+          Description: `LOT 종료: ${lot.LotNumber} (Recipe: ${lot.Package || '-'})`,
+          ImagePath: null,
+        });
+      }
+    }
+
+    if (logType == 4) {
+      // LOT 전용 탭: lot 이벤트만
+      events = lotEvents;
+    } else {
+      // 전체 탭: histories + lot 이벤트 합쳐서 시간순 정렬
+      events = [...events, ...lotEvents]
+        .sort((a, b) => (b.Time > a.Time ? 1 : -1))
+        .slice(0, limit);
+    }
+  }
+
+  return events;
 }
 
 /**
@@ -190,6 +283,28 @@ function getErrorBreakdown(lotId) {
 }
 
 /**
+ * 전체 또는 오늘 기준 불량 유형별 건수
+ * @param {boolean} todayOnly - true면 오늘(KST) 데이터만
+ */
+function getErrorBreakdownGlobal(todayOnly = false) {
+  const db = getDb();
+  if (!db) return [];
+
+  const where = todayOnly
+    ? `WHERE Item != 'PASS' AND date(StartTIme) = date('now', '+9 hours')`
+    : `WHERE Item != 'PASS'`;
+
+  return db.prepare(`
+    SELECT Item AS errorType, COUNT(*) AS count
+    FROM inspection_results
+    ${where}
+    GROUP BY Item
+    ORDER BY count DESC
+    LIMIT 10
+  `).all();
+}
+
+/**
  * XY 위치별 불량 수 (히트맵용)
  */
 function getFailHeatmap(lotId) {
@@ -247,7 +362,18 @@ function getLotStats(lotId) {
     GROUP BY InspectionType
   `).all(lotId);
 
-  return { ...lot, stats };
+  const overall = db.prepare(`
+    SELECT
+      COUNT(*) AS total,
+      SUM(CASE WHEN Item = 'PASS' THEN 1 ELSE 0 END) AS good,
+      SUM(CASE WHEN Item LIKE '%NoDevice%' THEN 1 ELSE 0 END) AS noDevice,
+      SUM(CASE WHEN Item LIKE '%XOut%' THEN 1 ELSE 0 END) AS xout,
+      SUM(CASE WHEN Item != 'PASS' AND Item NOT LIKE '%NoDevice%' AND Item NOT LIKE '%XOut%' THEN 1 ELSE 0 END) AS reject
+    FROM inspection_results
+    WHERE LotId = ?
+  `).get(lotId);
+
+  return { ...lot, stats, ...overall };
 }
 
 /**
@@ -262,7 +388,9 @@ function getLatestHistoryId() {
 }
 
 module.exports = {
+  getDb,
   getRecentEvents,
+  getErrorBreakdownGlobal,
   getEventContext,
   getInspectionSeries,
   getYieldSeries,
