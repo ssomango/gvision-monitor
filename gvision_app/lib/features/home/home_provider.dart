@@ -5,6 +5,7 @@ import '../../core/models/event.dart';
 import '../../core/api/events_api.dart';
 import '../../core/ws/ws_client.dart';
 import '../../services/notification_service.dart';
+import '../../services/notification_settings.dart';
 
 class HomeProvider extends ChangeNotifier {
   final WsClient _ws;
@@ -65,11 +66,12 @@ class HomeProvider extends ChangeNotifier {
         if (_recentEvents.length > 100) _recentEvents.removeLast();
         notifyListeners();
 
-        // ALERT(logType 1,2 검사/시스템) 또는 LOT 이벤트(logType 4)면 알림 발송
-        if (msg.type == WsMessageType.alert || event.logType == 4) {
+        // 알림 설정에 따라 조건부 발송
+        if (NotificationSettings.shouldNotify(event.logType)) {
           NotificationService.showAlert(
             title: '[${event.logTypeLabel}] 이벤트 발생',
             body: event.description,
+            logType: event.logType,
             eventId: event.id,
           );
         }

@@ -50,10 +50,30 @@ class InspectionsApi {
     return data['data'] as List<dynamic>? ?? [];
   }
 
-  /// 기존 유지
   static Future<List<dynamic>> fetchErrors({required int lotId}) async {
     final data =
-    await ApiClient.get('/api/inspections/errors?lotId=$lotId');
+        await ApiClient.get('/api/inspections/errors?lotId=$lotId');
     return data['data'] as List<dynamic>? ?? [];
+  }
+
+  static Future<List<Map<String, dynamic>>> fetchDurationSeries({
+    DateTime? from,
+    DateTime? to,
+  }) async {
+    final range = (from != null && to != null)
+        ? (_kstStr(from), _kstStr(to))
+        : _todayRange();
+
+    final data = await ApiClient.get(
+        '/api/inspections/duration?from=${Uri.encodeComponent(range.$1)}&to=${Uri.encodeComponent(range.$2)}');
+    final list = data['data'] as List<dynamic>? ?? [];
+    return list.cast<Map<String, dynamic>>();
+  }
+
+  static Future<List<Map<String, dynamic>>> fetchHeatmap(int lotId) async {
+    final data =
+        await ApiClient.get('/api/inspections/heatmap?lotId=$lotId');
+    final list = data['data'] as List<dynamic>? ?? [];
+    return list.cast<Map<String, dynamic>>();
   }
 }

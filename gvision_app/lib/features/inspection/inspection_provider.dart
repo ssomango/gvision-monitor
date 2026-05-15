@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../../core/api/inspections_api.dart';
 import '../../core/ws/ws_client.dart';
+import '../../services/notification_service.dart';
+import '../../services/notification_settings.dart';
 
 enum RangeType { hour1, hour6, today }
 
@@ -36,6 +38,9 @@ class InspectionProvider extends ChangeNotifier {
     abnormalYieldThreshold = value;
     notifyListeners();
   }
+
+  // 수율 임계값 감지용 — 첫 로드는 알림 없이 skip
+  double _prevYieldRate = -1;
 
   // 오늘 집계
   int total = 0, good = 0, noDevice = 0, reject = 0, xout = 0;
@@ -100,7 +105,31 @@ class InspectionProvider extends ChangeNotifier {
     }
 
     loading = false;
+    _checkYieldAlert();
     notifyListeners();
+  }
+
+  void _checkYieldAlert() {
+    final current = yieldRate;
+    final threshold = NotificationSettings.yieldThreshold;
+
+    // 첫 로드 시에는 알림 없이 기준값만 저장
+    if (_prevYieldRate < 0) {
+      _prevYieldRate = current;
+      return;
+    }
+
+    // 임계값 이상 → 미만으로 떨어질 때만 알림 (중복 방지)
+    if (NotificationSettings.yieldAlertEnabled &&
+        _prevYieldRate >= threshold &&
+        current < threshold) {
+      NotificationService.showYieldAlert(
+        yieldRate: current,
+        threshold: threshold,
+      );
+    }
+
+    _prevYieldRate = current;
   }
 
 

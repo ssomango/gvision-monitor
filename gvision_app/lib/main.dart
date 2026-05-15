@@ -12,12 +12,14 @@ import 'features/lots/lots_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/events/event_context_screen.dart';
 import 'services/notification_service.dart';
+import 'services/notification_settings.dart';
 import 'shared/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await ApiClient.loadSettings();
-  await NotificationService.init();
+  await NotificationSettings.load();
+  await NotificationService.init(); // 내부에서 NotificationHistory.load() 호출
   runApp(const GVisionApp());
 }
 
@@ -26,7 +28,6 @@ class GVisionApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // WsClient를 최상위에서 생성해 모든 Provider가 공유
     final ws = WsClient()..connect();
 
     return MultiProvider(
